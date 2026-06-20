@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Build output (the widget bundle in the plugin IS committed so the plugin is
+# installable without a build step; package dist/ is not)
+packages/*/dist/
+*.tsbuildinfo
+
+# Env & secrets
+.env
+.env.local
+
+# Logs & OS
+*.log
+.DS_Store
+coverage/

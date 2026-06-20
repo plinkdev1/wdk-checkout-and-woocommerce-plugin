@@ -1,0 +1,6 @@
+# The checkout widget (wdk-checkout.js) is provided separately by the JS engineer.
+# This placeholder keeps the assets/js directory under version control.
+#
+# The PHP gateway enqueues a script with handle "wdk-pay-checkout" pointing at
+# assets/js/wdk-checkout.js and exposes its configuration as window.WDK_PAY.
+# See includes/class-wdk-pay-gateway.php (enqueue_widget_assets / build_widget_config).
