@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WDK Pay — Checkout Widget Demo</title>
+  <style>
+    body { margin: 0; background: #f4f1ee; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #161312; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 60px; }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .sub { color: #6b6b6b; font-size: 13px; margin: 0 0 24px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: #fff; border: 1px solid #e7e2dc; border-radius: 16px; padding: 22px; box-shadow: 0 8px 30px rgba(0,0,0,.04); }
+    .order-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; border-bottom: 1px dashed #ece7e1; }
+    .order-row:last-child { border-bottom: none; font-weight: 700; }
+    .badge { display: inline-block; background: #161312; color: #f7eee8; font-size: 11px; padding: 3px 9px; border-radius: 999px; }
+    .thumb { width: 46px; height: 46px; border-radius: 10px; background: linear-gradient(135deg,#f4642f,#161312); }
+    .item { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Acme Store <span class="badge">demo checkout</span></h1>
+    <p class="sub">A standalone demo of the WDK Pay checkout widget — no WooCommerce install required.</p>
+    <div class="grid">
+      <div class="card">
+        <div class="item">
+          <div class="thumb"></div>
+          <div>
+            <div style="font-weight:600">WDK Hoodie</div>
+            <div style="color:#6b6b6b;font-size:13px">Size M · 1 ×</div>
+          </div>
+        </div>
+        <div class="order-row"><span>Subtotal</span><span>18.00 USDt</span></div>
+        <div class="order-row"><span>Shipping</span><span>1.99 USDt</span></div>
+        <div class="order-row"><span>Total</span><span>19.99 USDt</span></div>
+      </div>
+      <div class="card">
+        <div id="wdk-pay-root"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // The merchant back-end (the WooCommerce plugin) injects this object. Here
+    // we hard-code a sample payment intent so the widget can run standalone.
+    window.WDK_PAY = {
+      intent: {
+        orderId: 1234,
+        orderKey: 'wc_order_demo1234',
+        amount: '19.99',
+        amountBase: '19990000',
+        decimals: 6,
+        tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+        tokenSymbol: 'USDt',
+        chainId: 1,
+        chainName: 'Ethereum',
+        chainKey: 'ethereum',
+        receivingAddress: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        reference: '0xab9f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
+        status: 'pending',
+        expiresAt: Math.floor(Date.now() / 1000) + 1800
+      },
+      endpoints: { confirm: '#', status: '#' },
+      nonce: 'demo-nonce',
+      returnUrl: '#'
+    };
+    // ethers is loaded by the plugin (UMD) and only used when the customer
+    // clicks "Pay with wallet". Stubbed here so the UI renders for the demo.
+    window.ethers = window.ethers || {};
+  </script>
+  <script src="../woocommerce-plugin/wdk-pay/assets/js/wdk-checkout.js"></script>
+</body>
+</html>

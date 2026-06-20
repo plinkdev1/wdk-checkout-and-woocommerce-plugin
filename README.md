@@ -53,6 +53,16 @@ The payment is a **direct, peer-to-peer ERC-20 transfer**. The plugin never touc
 
 For customers with no native gas token, the checkout can use **EIP-3009 `transferWithAuthorization`**: the customer *signs* a transfer (free), and the merchant's relayer submits it and pays gas. That path is implemented by the companion module **[`wdk-protocol-eip3009`](https://github.com/plinkdev1/wdk-protocol-eip3009)** — see [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md#gasless).
 
+## Screenshots
+
+| Checkout (storefront + widget) | Pay with wallet | Pay manually (QR) |
+|:--:|:--:|:--:|
+| ![Checkout overview](./media/screenshots/01-checkout-overview.png) | ![Pay with wallet](./media/screenshots/02-pay-with-wallet.png) | ![Pay manually](./media/screenshots/03-pay-manually-qr.png) |
+
+**▶ Demo video:** [`media/demo/wdk-pay-checkout-demo.webm`](./media/demo/wdk-pay-checkout-demo.webm) (use **Download**/**Raw** on GitHub). The shot-by-shot script is in [`docs/DEMO.md`](./docs/DEMO.md).
+
+> Try it yourself with **zero setup**: open [`examples/checkout-demo.html`](./examples/checkout-demo.html) in a browser — it runs the real widget against a sample payment intent. Screenshots above are captured from that page via headless Chromium.
+
 ## Supported networks & asset
 
 USDt on **Ethereum**, **Polygon**, and **Arbitrum** out of the box (default token addresses bundled). Adding a chain is one entry in `WDK_Pay_Chains`.
