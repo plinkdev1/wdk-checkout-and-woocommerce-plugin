@@ -235,11 +235,12 @@ function labeled (label: string, valueHtml: string): HTMLElement {
   wrap.innerHTML = `<div style="font-size:11px;color:#9a9a9a;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${esc(label)}</div><div style="font-size:14px">${valueHtml}</div>`
   return wrap
 }
-function esc (s: string): string {
+/** HTML-escapes untrusted strings before they go into the widget's innerHTML (XSS guard). */
+export function esc (s: string): string {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string))
 }
 
-function formatRemaining (ms: number): string {
+export function formatRemaining (ms: number): string {
   const total = Math.floor(ms / 1000)
   const m = Math.floor(total / 60)
   const s = total % 60
