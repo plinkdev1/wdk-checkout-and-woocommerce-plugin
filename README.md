@@ -107,6 +107,16 @@ The widget is framework-free, self-contained, and exposes a small SDK (`mountChe
 - [`docs/SECURITY.md`](./docs/SECURITY.md) — the self-custodial trust & verification model.
 - [`docs/DEMO.md`](./docs/DEMO.md) — demo-video walkthrough.
 
+## Roadmap
+
+📍 **Full phased roadmap: [`ROADMAP.md`](./ROADMAP.md).** It shows what ships today
+(self-custodial USDt checkout + on-chain verification + gasless EIP-3009) and
+sequences multi-asset/multi-chain checkout, **Lightning (Spark) instant payments**,
+fiat pricing, swap-to-settle, subscriptions/refunds, more platforms (Shopify,
+Magento), and fiat on-ramp — against real, published `@tetherto/*` packages.
+
+---
+
 ## License
 
 [MIT](./LICENSE). Built with [Tether WDK](https://docs.wallet.tether.io). A community reference implementation submitted to the Tether WDK bounty program; not an official Tether product.
