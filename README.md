@@ -26,8 +26,10 @@ This is that reference. It turns any WooCommerce store into a **self-custodial U
 
 | Component | What it is |
 |---|---|
-| **`woocommerce-plugin/wdk-pay/`** | A complete WooCommerce **payment gateway plugin** (PHP): admin settings, the "Pay with USDt" gateway, REST endpoints, and on-chain payment verification. |
-| **`packages/wdk-checkout/`** | A headless **checkout widget / SDK** (TypeScript): the customer-facing payment UI — connect a wallet and pay, or pay manually and confirm by transaction hash. Builds to a single asset the plugin loads. |
+| **`woocommerce-plugin/wdk-pay/`** | A complete WooCommerce **payment gateway plugin** (PHP): admin settings, the "Pay with USDt/XAUt" gateway, REST endpoints, and on-chain payment verification. |
+| **`packages/wdk-checkout/`** | A headless, **themeable** **checkout widget / SDK** (TypeScript): connect a wallet and pay, or pay manually and confirm by tx hash. Builds to a single asset the plugin loads. |
+| **`packages/wdk-checkout/x402`** | An **x402 facilitator** (TypeScript): verify per-request payments from bots/agents off-chain. |
+| **`examples/`** | A **Cloudflare Worker** + **Express middleware** that charge AI crawlers via x402 (humans + search engines pass free). |
 | **`docs/`** | Platform-selection rationale & architecture (the M1 deliverable), merchant setup, security model, and the demo script. |
 
 ## How it works
@@ -92,6 +94,46 @@ npm run build          # builds dist/ (the SDK) and the plugin's wdk-checkout.js
 ```
 
 The widget is framework-free, self-contained, and exposes a small SDK (`mountCheckout`, `payIntent`, …) so it can be embedded in any storefront, not just WooCommerce.
+
+## Customization — match your storefront
+
+The widget is **fully themeable** via a `CheckoutTheme` palette (no source edits).
+Pass a `theme` to `mountCheckout` — any subset of keys overrides the WDK default
+(warm dark surface + orange accent); the palette is injected as CSS variables so
+it re-skins the entire widget:
+
+```ts
+import { mountCheckout } from 'wdk-checkout';
+
+mountCheckout(root, {
+  ...config,
+  theme: { accent: '#0D9488', surface: '#0B1F1C', onSurface: '#E6FFFA', radius: '10px' },
+});
+```
+
+Keys: `surface · onSurface · text · textMuted · textFaint · accent · accentText ·
+border · info · success · error · radius · fontFamily` (see `DEFAULT_CHECKOUT_THEME`).
+Merchant-facing payment settings (method title/description, chain, **asset
+USDt/XAUt**, RPC, confirmations, window) are configured in the WooCommerce admin.
+
+## x402 — charge bots, crawlers & AI agents
+
+This repo also ships the **server side of [x402](#)** — monetize automated
+traffic per request:
+
+- **`wdk-checkout/x402`** — a facilitator: `buildPaymentRequirements` /
+  `buildPaymentRequiredResponse` (the 402 challenge), `decodePaymentHeader`, and
+  `verifyExactPayment` (recovers the EIP-3009 signer off-chain — no keys, no RPC,
+  edge-safe).
+- **`examples/cloudflare-x402-worker.js`** — a reverse proxy for the
+  Netlify-behind-Cloudflare case: humans + verified search engines pass through,
+  AI scrapers get a 402 and pay; funds go straight to your address.
+- **`examples/express-x402-middleware.js`** — the same as Express middleware.
+
+x402's "exact" scheme is a signed EIP-3009 authorization, so the wallet
+([extension](https://github.com/plinkdev1/wdk-wallet-extension)) produces the
+payment and [wdk-protocol-eip3009](https://github.com/plinkdev1/wdk-protocol-eip3009)
+settles it on-chain. See [`ROADMAP.md`](./ROADMAP.md).
 
 ## Quickstart (local)
 
