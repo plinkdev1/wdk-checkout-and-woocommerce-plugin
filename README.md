@@ -156,6 +156,7 @@ settles it on-chain. See [`ROADMAP.md`](./ROADMAP.md).
 
 - [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — **M1**: platform selection, architecture, integration plan.
 - [`docs/MERCHANT_SETUP.md`](./docs/MERCHANT_SETUP.md) — install & configure, end to end.
+- [`docs/ECOMMERCE_RAILS.md`](./docs/ECOMMERCE_RAILS.md) — wire the optional rails (fiat pricing, swap-to-settle, subscriptions, Lightning) with copy-paste examples.
 - [`docs/SECURITY.md`](./docs/SECURITY.md) — the self-custodial trust & verification model.
 - [`docs/DEMO.md`](./docs/DEMO.md) — demo-video walkthrough.
 
