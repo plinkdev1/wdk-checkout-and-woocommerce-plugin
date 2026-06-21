@@ -4,6 +4,34 @@
   "description": "Headless WDK checkout widget \u2014 self-custodial USDt payments for ecommerce. Powers the WooCommerce 'WDK Pay' gateway and works standalone.",
   "type": "module",
   "license": "MIT",
+  "author": "WDK Pay contributors",
+  "keywords": [
+    "wdk",
+    "tether",
+    "usdt",
+    "checkout",
+    "woocommerce",
+    "ecommerce",
+    "payments",
+    "self-custodial",
+    "x402",
+    "eip-3009",
+    "lightning",
+    "stablecoin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/plinkdev1/wdk-checkout-and-woocommerce-plugin.git",
+    "directory": "packages/wdk-checkout"
+  },
+  "homepage": "https://github.com/plinkdev1/wdk-checkout-and-woocommerce-plugin/tree/main/packages/wdk-checkout#readme",
+  "bugs": {
+    "url": "https://github.com/plinkdev1/wdk-checkout-and-woocommerce-plugin/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -41,10 +69,19 @@
     "build:types": "tsc",
     "build:widget": "node build.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "qrcode-generator": "1.5.0"
+  },
+  "peerDependencies": {
+    "ethers": ">=6.0.0 <7"
+  },
+  "peerDependenciesMeta": {
+    "ethers": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "esbuild": "0.28.1",
