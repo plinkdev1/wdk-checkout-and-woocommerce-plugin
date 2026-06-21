@@ -1,4 +1,5 @@
-import type { PaymentIntent, PaymentStatus, WdkPayConfig } from './types.js'
+import type { CheckoutTheme, PaymentIntent, PaymentStatus, WdkPayConfig } from './types.js'
+import { DEFAULT_CHECKOUT_THEME } from './types.js'
 import { payIntent } from './usdt.js'
 import { qrDataUrl } from './qr.js'
 
@@ -15,8 +16,10 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
   let pollTimer: ReturnType<typeof setInterval> | undefined
   let countdownTimer: ReturnType<typeof setInterval> | undefined
 
+  const theme: CheckoutTheme = { ...DEFAULT_CHECKOUT_THEME, ...config.theme }
+
   root.innerHTML = ''
-  const el = buildDom(intent)
+  const el = buildDom(intent, theme)
   root.appendChild(el.container)
 
   function setStatus (next: PaymentStatus, message?: string) {
@@ -96,10 +99,20 @@ interface Dom {
   tabs: { wallet: HTMLButtonElement, manual: HTMLButtonElement }
 }
 
-function buildDom (intent: PaymentIntent): Dom {
-  const container = div({ maxWidth: '420px', margin: '0 auto', fontFamily: 'ui-sans-serif, system-ui, sans-serif', color: '#161312' })
+function buildDom (intent: PaymentIntent, theme: CheckoutTheme): Dom {
+  const container = div({ maxWidth: '420px', margin: '0 auto', fontFamily: 'var(--wp-font)', color: 'var(--wp-text)' })
+  // Inject the palette as CSS variables; they cascade to every child element
+  // (including the helper-built buttons/inputs), so a merchant can re-skin the
+  // whole widget by passing `theme` to mountCheckout().
+  const vars: Record<string, string> = {
+    '--wp-surface': theme.surface, '--wp-on-surface': theme.onSurface, '--wp-text': theme.text,
+    '--wp-text-muted': theme.textMuted, '--wp-text-faint': theme.textFaint, '--wp-accent': theme.accent,
+    '--wp-accent-text': theme.accentText, '--wp-border': theme.border, '--wp-info': theme.info,
+    '--wp-success': theme.success, '--wp-error': theme.error, '--wp-radius': theme.radius, '--wp-font': theme.fontFamily,
+  }
+  for (const [k, val] of Object.entries(vars)) container.style.setProperty(k, val)
 
-  const amountCard = div({ background: '#161312', color: '#f7eee8', borderRadius: '14px', padding: '20px', textAlign: 'center', marginBottom: '16px' })
+  const amountCard = div({ background: 'var(--wp-surface)', color: 'var(--wp-on-surface)', borderRadius: 'var(--wp-radius)', padding: '20px', textAlign: 'center', marginBottom: '16px' })
   amountCard.innerHTML = `
     <div style="font-size:13px;opacity:.75">Amount due</div>
     <div style="font-size:30px;font-weight:700;letter-spacing:-.5px">${esc(intent.amount)} ${esc(intent.tokenSymbol)}</div>
@@ -132,7 +145,7 @@ function buildDom (intent: PaymentIntent): Dom {
   manualPanel.appendChild(hashLabel)
   const hashInput = document.createElement('input')
   hashInput.placeholder = '0x…'
-  Object.assign(hashInput.style, { width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '13px', boxSizing: 'border-box', marginBottom: '8px' })
+  Object.assign(hashInput.style, { width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--wp-border)', fontSize: '13px', boxSizing: 'border-box', marginBottom: '8px' })
   manualPanel.appendChild(hashInput)
   const confirmBtn = button('Confirm payment')
   manualPanel.appendChild(confirmBtn)
@@ -142,10 +155,10 @@ function buildDom (intent: PaymentIntent): Dom {
   const statusBox = div({ marginTop: '14px', minHeight: '20px', fontSize: '13px' })
   container.appendChild(statusBox)
 
-  const countdown = div({ marginTop: '10px', fontSize: '12px', color: '#6b6b6b', textAlign: 'center' })
+  const countdown = div({ marginTop: '10px', fontSize: '12px', color: 'var(--wp-text-muted)', textAlign: 'center' })
   container.appendChild(countdown)
 
-  const footer = div({ marginTop: '12px', fontSize: '11px', color: '#9a9a9a', textAlign: 'center' })
+  const footer = div({ marginTop: '12px', fontSize: '11px', color: 'var(--wp-text-faint)', textAlign: 'center' })
   footer.textContent = 'Secured by WDK · self-custodial · on-chain verified'
   container.appendChild(footer)
 
@@ -171,13 +184,13 @@ function switchTab (el: Dom, tab: 'wallet' | 'manual') {
 
 function renderStatus (el: Dom, status: PaymentStatus, message: string | undefined, config: WdkPayConfig) {
   const map: Record<PaymentStatus, { color: string, label: string }> = {
-    idle: { color: '#6b6b6b', label: '' },
-    connecting: { color: '#1f6feb', label: 'Connecting…' },
-    'awaiting-signature': { color: '#1f6feb', label: 'Confirm in your wallet…' },
-    submitted: { color: '#1f6feb', label: 'Submitted…' },
-    confirming: { color: '#f4642f', label: 'Verifying…' },
-    confirmed: { color: '#16a34a', label: 'Payment confirmed ✓' },
-    failed: { color: '#dc2626', label: 'Payment failed' }
+    idle: { color: 'var(--wp-text-muted)', label: '' },
+    connecting: { color: 'var(--wp-info)', label: 'Connecting…' },
+    'awaiting-signature': { color: 'var(--wp-info)', label: 'Confirm in your wallet…' },
+    submitted: { color: 'var(--wp-info)', label: 'Submitted…' },
+    confirming: { color: 'var(--wp-accent)', label: 'Verifying…' },
+    confirmed: { color: 'var(--wp-success)', label: 'Payment confirmed ✓' },
+    failed: { color: 'var(--wp-error)', label: 'Payment failed' }
   }
   const s = map[status]
   el.statusBox.innerHTML = message || s.label ? `<span style="color:${s.color}">${esc(message || s.label)}</span>` : ''
@@ -185,7 +198,7 @@ function renderStatus (el: Dom, status: PaymentStatus, message: string | undefin
 }
 
 function finishConfirmed (el: Dom, config: WdkPayConfig) {
-  el.statusBox.innerHTML = '<span style="color:#16a34a;font-weight:600">Payment confirmed ✓ — redirecting…</span>'
+  el.statusBox.innerHTML = '<span style="color:var(--wp-success);font-weight:600">Payment confirmed ✓ — redirecting…</span>'
   setTimeout(() => { window.location.href = config.returnUrl }, 1500)
 }
 
@@ -215,24 +228,24 @@ function div (style: Partial<CSSStyleDeclaration>): HTMLElement {
 function p (text: string): HTMLElement {
   const el = document.createElement('p')
   el.textContent = text
-  Object.assign(el.style, { fontSize: '12px', color: '#6b6b6b', lineHeight: '1.5', margin: '10px 0 0' })
+  Object.assign(el.style, { fontSize: '12px', color: 'var(--wp-text-muted)', lineHeight: '1.5', margin: '10px 0 0' })
   return el
 }
 function button (label: string): HTMLButtonElement {
   const b = document.createElement('button')
   b.innerHTML = label
-  Object.assign(b.style, { width: '100%', padding: '13px', borderRadius: '10px', border: 'none', background: '#f4642f', color: '#fff', fontSize: '15px', fontWeight: '600', cursor: 'pointer' })
+  Object.assign(b.style, { width: '100%', padding: '13px', borderRadius: '10px', border: 'none', background: 'var(--wp-accent)', color: 'var(--wp-accent-text)', fontSize: '15px', fontWeight: '600', cursor: 'pointer' })
   return b
 }
 function tabButton (label: string, active: boolean): HTMLButtonElement {
   const b = document.createElement('button')
   b.textContent = label
-  Object.assign(b.style, { flex: '1', padding: '8px', borderRadius: '8px', border: '1px solid #e2e2e2', background: '#fff', fontSize: '13px', cursor: 'pointer', opacity: active ? '1' : '.55' })
+  Object.assign(b.style, { flex: '1', padding: '8px', borderRadius: '8px', border: '1px solid var(--wp-border)', background: 'transparent', fontSize: '13px', cursor: 'pointer', color: 'inherit', opacity: active ? '1' : '.55' })
   return b
 }
 function labeled (label: string, valueHtml: string): HTMLElement {
   const wrap = div({ margin: '10px 0' })
-  wrap.innerHTML = `<div style="font-size:11px;color:#9a9a9a;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${esc(label)}</div><div style="font-size:14px">${valueHtml}</div>`
+  wrap.innerHTML = `<div style="font-size:11px;color:var(--wp-text-faint);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${esc(label)}</div><div style="font-size:14px">${valueHtml}</div>`
   return wrap
 }
 /** HTML-escapes untrusted strings before they go into the widget's innerHTML (XSS guard). */

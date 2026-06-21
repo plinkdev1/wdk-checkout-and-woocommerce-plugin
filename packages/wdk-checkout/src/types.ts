@@ -34,6 +34,57 @@ export interface PaymentIntent {
 }
 
 /** The full config object the merchant page exposes as `window.WDK_PAY`. */
+/**
+ * Color/typography palette for the checkout widget. Every key is optional —
+ * unspecified keys fall back to {@link DEFAULT_CHECKOUT_THEME}. Pass a partial
+ * via `WdkPayConfig.theme` to match the merchant's storefront.
+ */
+export interface CheckoutTheme {
+  /** Dark card / surface background. */
+  surface: string
+  /** Text on the dark surface. */
+  onSurface: string
+  /** Primary text color. */
+  text: string
+  /** Muted / secondary text. */
+  textMuted: string
+  /** Faint text (footer, field labels). */
+  textFaint: string
+  /** Accent / primary-button color (brand). */
+  accent: string
+  /** Text on the accent button. */
+  accentText: string
+  /** Input + control border color. */
+  border: string
+  /** In-progress status color. */
+  info: string
+  /** Success status color. */
+  success: string
+  /** Error status color. */
+  error: string
+  /** Card corner radius (e.g. "14px"). */
+  radius: string
+  /** Font-family stack. */
+  fontFamily: string
+}
+
+/** WDK default palette (warm dark surface + WDK orange accent). */
+export const DEFAULT_CHECKOUT_THEME: CheckoutTheme = {
+  surface: '#161312',
+  onSurface: '#f7eee8',
+  text: '#161312',
+  textMuted: '#6b6b6b',
+  textFaint: '#9a9a9a',
+  accent: '#f4642f',
+  accentText: '#ffffff',
+  border: '#cccccc',
+  info: '#1f6feb',
+  success: '#16a34a',
+  error: '#dc2626',
+  radius: '14px',
+  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+}
+
 export interface WdkPayConfig {
   readonly intent: PaymentIntent
   readonly endpoints: {
@@ -48,6 +99,8 @@ export interface WdkPayConfig {
   readonly returnUrl: string
   /** Optional block-explorer base URL for tx links. */
   readonly explorer?: string
+  /** Optional palette override — match the widget to your storefront. */
+  readonly theme?: Partial<CheckoutTheme>
 }
 
 /** Minimal EIP-1193 provider shape (e.g. `window.ethereum`). */
