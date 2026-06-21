@@ -34,6 +34,13 @@
    low-fee BTC payments are a natural fit for retail; invoice + settle flow.
 4. **Bitcoin on-chain** — accept BTC via the engine's BIP-84 support.
 
+5. ✅ **x402 — charge bots/agents/crawlers** — an HTTP 402 facilitator
+   (`wdk-checkout/x402`) verifies EIP-3009 "exact"-scheme payments off-chain
+   (no keys/RPC, edge-friendly), plus ready-to-deploy **Cloudflare Worker** and
+   **Express** middleware that let humans + verified search engines through and
+   paywall AI scrapers. Pairs with the WDK wallet's x402 payer client and
+   `@tetherto/wdk-protocol-eip3009` for settlement.
+
 ## ⏳ Phase 3 — Merchant economics
 
 5. **Fiat pricing display** (`@tetherto/wdk-pricing-*`) — show prices/totals in the

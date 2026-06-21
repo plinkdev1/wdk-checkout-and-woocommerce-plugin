@@ -10,6 +10,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./x402": {
+      "types": "./dist/x402.d.ts",
+      "default": "./dist/x402.js"
     }
   },
   "files": ["dist", "src"],
