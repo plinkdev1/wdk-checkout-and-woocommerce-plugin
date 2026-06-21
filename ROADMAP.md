@@ -68,5 +68,10 @@ roadmaps.
 
 ## Customization & presentation follow-ups
 
-- **Merchant color settings in the WooCommerce admin** — the widget is already themeable via `CheckoutTheme` (pass `theme` to `mountCheckout`); a small set of admin color fields (accent/surface) could feed that `theme` so merchants re-skin without code. See `docs`/README "Customization".
+- ✅ **Merchant color settings in the WooCommerce admin** — done. The gateway admin
+  now has a **Checkout appearance** section (native color pickers for accent /
+  accent-text / surface / surface-text + a corner-style select). It resolves to a
+  `CheckoutTheme` partial passed to the widget as `WDK_PAY.theme`, so merchants
+  re-skin the checkout with no code. See `docs/MERCHANT_SETUP.md` / README
+  "Customization".
 - **Capture screenshots** of XAUt checkout + the x402 Worker flow, add to `media/screenshots/` + README.

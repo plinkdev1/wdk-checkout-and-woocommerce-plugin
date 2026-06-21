@@ -33,6 +33,23 @@ Go to **WooCommerce → Settings → Payments → WDK Pay → Manage**:
 | **Required confirmations** | `1` for fast chains; raise for higher-value orders |
 | **Payment window (min)** | How long a customer has to pay (default 30) |
 
+### Checkout appearance (optional)
+
+Under the **Checkout appearance** heading you can re-skin the payment widget to
+match your storefront — no code, just the admin:
+
+| Setting | What to enter |
+|---|---|
+| **Accent / button color** | Your brand color for buttons & highlights (color picker or hex) |
+| **Accent text color** | Text/icon color on the accent buttons |
+| **Surface (card) color** | Background of the amount card |
+| **Surface text color** | Text shown on the surface/card |
+| **Corner style** | Sharp / Soft / Rounded / Pill |
+
+Each color is a native picker bound to a hex field. **Leave a color blank to keep
+the WDK default.** The plugin maps these to the widget's `CheckoutTheme`, so the
+checkout your customers see is themed to your shop.
+
 Save. WDK Pay now appears as a checkout option.
 
 ## 4. Pricing in USDt

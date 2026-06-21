@@ -160,7 +160,179 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 				'default'     => 'no',
 				'desc_tip'    => false,
 			),
+			'appearance_title'   => array(
+				'title'       => __( 'Checkout appearance', 'wdk-pay' ),
+				'type'        => 'title',
+				'description' => __( 'Match the payment widget to your storefront. Colors are 6-digit hex (e.g. #F4642F); leave a color blank to use the WDK default.', 'wdk-pay' ),
+			),
+			'theme_accent'       => array(
+				'title'       => __( 'Accent / button color', 'wdk-pay' ),
+				'type'        => 'wdk_color',
+				'description' => __( 'Primary buttons and highlights.', 'wdk-pay' ),
+				'default'     => '#f4642f',
+				'placeholder' => '#f4642f',
+				'desc_tip'    => true,
+			),
+			'theme_accent_text'  => array(
+				'title'       => __( 'Accent text color', 'wdk-pay' ),
+				'type'        => 'wdk_color',
+				'description' => __( 'Text/icon color on the accent buttons.', 'wdk-pay' ),
+				'default'     => '#ffffff',
+				'placeholder' => '#ffffff',
+				'desc_tip'    => true,
+			),
+			'theme_surface'      => array(
+				'title'       => __( 'Surface (card) color', 'wdk-pay' ),
+				'type'        => 'wdk_color',
+				'description' => __( 'Background of the amount card inside the widget.', 'wdk-pay' ),
+				'default'     => '#161312',
+				'placeholder' => '#161312',
+				'desc_tip'    => true,
+			),
+			'theme_on_surface'   => array(
+				'title'       => __( 'Surface text color', 'wdk-pay' ),
+				'type'        => 'wdk_color',
+				'description' => __( 'Text color shown on the surface/card.', 'wdk-pay' ),
+				'default'     => '#f7eee8',
+				'placeholder' => '#f7eee8',
+				'desc_tip'    => true,
+			),
+			'theme_radius'       => array(
+				'title'       => __( 'Corner style', 'wdk-pay' ),
+				'type'        => 'select',
+				'description' => __( 'Roundness of the checkout card and buttons.', 'wdk-pay' ),
+				'default'     => 'rounded',
+				'options'     => array(
+					'sharp'   => __( 'Sharp (4px)', 'wdk-pay' ),
+					'soft'    => __( 'Soft (10px)', 'wdk-pay' ),
+					'rounded' => __( 'Rounded (14px)', 'wdk-pay' ),
+					'pill'    => __( 'Pill (22px)', 'wdk-pay' ),
+				),
+				'desc_tip'    => true,
+			),
 		);
+	}
+
+	/**
+	 * Render a color field: a native color picker bound to a hex text input.
+	 *
+	 * Registered as form-field type `wdk_color`. Self-contained (no enqueued
+	 * admin script, no dependency on WooCommerce's optional color type): the
+	 * text input is the saved value, the swatch is a visual aid, and the two
+	 * stay in sync via minimal inline handlers.
+	 *
+	 * @param string              $key  Field key.
+	 * @param array<string,mixed> $data Field definition.
+	 * @return string Field HTML (a settings table row).
+	 */
+	public function generate_wdk_color_html( $key, $data ) {
+		$field_key = $this->get_field_key( $key );
+		$defaults  = array(
+			'title'       => '',
+			'class'       => '',
+			'placeholder' => '',
+			'desc_tip'    => false,
+			'description' => '',
+			'default'     => '',
+		);
+		$data      = wp_parse_args( $data, $defaults );
+		$value     = $this->get_option( $key, $data['default'] );
+		$swatch_id = $field_key . '_swatch';
+
+		ob_start();
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label for="<?php echo esc_attr( $field_key ); ?>"><?php echo wp_kses_post( $data['title'] ); ?> <?php echo $this->get_tooltip_html( $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
+			</th>
+			<td class="forminp">
+				<fieldset>
+					<legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
+					<input
+						type="color"
+						id="<?php echo esc_attr( $swatch_id ); ?>"
+						value="<?php echo esc_attr( '' !== $value ? $value : ( $data['default'] ? $data['default'] : '#000000' ) ); ?>"
+						style="width:42px;height:30px;vertical-align:middle;padding:0;border:1px solid #ddd;border-radius:4px;cursor:pointer;"
+						oninput="var t=document.getElementById('<?php echo esc_js( $field_key ); ?>');if(t){t.value=this.value;}" />
+					<input
+						class="input-text regular-input <?php echo esc_attr( $data['class'] ); ?>"
+						type="text"
+						name="<?php echo esc_attr( $field_key ); ?>"
+						id="<?php echo esc_attr( $field_key ); ?>"
+						style="width:120px;vertical-align:middle;font-family:monospace;margin-left:6px;"
+						value="<?php echo esc_attr( $value ); ?>"
+						placeholder="<?php echo esc_attr( $data['placeholder'] ); ?>"
+						oninput="var s=document.getElementById('<?php echo esc_js( $swatch_id ); ?>');if(s&&/^#[0-9A-Fa-f]{6}$/.test(this.value)){s.value=this.value;}" />
+					<?php echo $this->get_description_html( $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</fieldset>
+			</td>
+		</tr>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Validate/sanitize a `wdk_color` field on save: require 6-digit hex.
+	 *
+	 * An empty value is allowed (the widget falls back to the WDK default).
+	 * Invalid input is rejected with an admin error and the prior value kept.
+	 *
+	 * @param string $key   Field key.
+	 * @param string $value Submitted value.
+	 * @return string Sanitised hex color, or '' to use the default.
+	 */
+	public function validate_wdk_color_field( $key, $value ) {
+		$value = trim( sanitize_text_field( (string) $value ) );
+
+		if ( '' === $value ) {
+			return '';
+		}
+
+		if ( ! preg_match( '/^#[0-9A-Fa-f]{6}$/', $value ) ) {
+			WC_Admin_Settings::add_error(
+				__( 'WDK Pay: checkout colors must be a 6-digit hex value like #F4642F.', 'wdk-pay' )
+			);
+			return (string) $this->get_option( $key );
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Resolve the merchant's checkout-appearance settings into a CheckoutTheme
+	 * partial (the JS widget merges it over its DEFAULT_CHECKOUT_THEME).
+	 *
+	 * Only keys the merchant actually set are returned for the colors; the
+	 * corner radius always resolves (to a px string) from the select.
+	 *
+	 * @return array<string,string> Partial CheckoutTheme (camelCase keys).
+	 */
+	private function resolve_theme() {
+		$radius_map = array(
+			'sharp'   => '4px',
+			'soft'    => '10px',
+			'rounded' => '14px',
+			'pill'    => '22px',
+		);
+		$radius_key = (string) $this->get_option( 'theme_radius', 'rounded' );
+		$radius     = isset( $radius_map[ $radius_key ] ) ? $radius_map[ $radius_key ] : '14px';
+
+		$theme = array();
+		$map   = array(
+			'theme_accent'      => 'accent',
+			'theme_accent_text' => 'accentText',
+			'theme_surface'     => 'surface',
+			'theme_on_surface'  => 'onSurface',
+		);
+		foreach ( $map as $option_key => $theme_key ) {
+			$val = trim( (string) $this->get_option( $option_key, '' ) );
+			if ( '' !== $val && preg_match( '/^#[0-9A-Fa-f]{6}$/', $val ) ) {
+				$theme[ $theme_key ] = $val;
+			}
+		}
+		$theme['radius'] = $radius;
+
+		return $theme;
 	}
 
 	/**
@@ -178,7 +350,8 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 	 *     confirmations:int,
 	 *     payment_window:int,
 	 *     gasless:bool,
-	 *     pricing_note:bool
+	 *     pricing_note:bool,
+	 *     theme:array<string,string>
 	 * }
 	 */
 	public function get_resolved_settings() {
@@ -209,6 +382,7 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 			'payment_window'    => max( 1, (int) $this->get_option( 'payment_window', 30 ) ),
 			'gasless'           => 'yes' === $this->get_option( 'gasless_eip3009', 'no' ),
 			'pricing_note'      => 'yes' === $this->get_option( 'pricing_note', 'yes' ),
+			'theme'             => $this->resolve_theme(),
 		);
 	}
 
@@ -452,7 +626,7 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 	private function build_widget_config( $order, array $settings ) {
 		$intent = ( new WDK_Pay_Intent( $order, $settings ) )->to_array();
 
-		return array(
+		$config = array(
 			'intent'    => $intent,
 			'endpoints' => array(
 				'confirm' => rest_url( WDK_Pay_REST::NAMESPACE . '/confirm' ),
@@ -465,5 +639,13 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 				'pollInterval' => 5000,
 			),
 		);
+
+		// Merchant-chosen palette (CheckoutTheme partial). Only attach when set,
+		// so the widget keeps its WDK default when the merchant changed nothing.
+		if ( ! empty( $settings['theme'] ) ) {
+			$config['theme'] = $settings['theme'];
+		}
+
+		return $config;
 	}
 }

@@ -113,8 +113,16 @@ mountCheckout(root, {
 
 Keys: `surface · onSurface · text · textMuted · textFaint · accent · accentText ·
 border · info · success · error · radius · fontFamily` (see `DEFAULT_CHECKOUT_THEME`).
-Merchant-facing payment settings (method title/description, chain, **asset
-USDt/XAUt**, RPC, confirmations, window) are configured in the WooCommerce admin.
+
+**No code needed for WooCommerce.** The gateway admin (**WooCommerce → Settings →
+Payments → WDK Pay → Checkout appearance**) exposes native color pickers for the
+**accent / button**, **accent text**, **surface (card)**, and **surface text**
+colors, plus a **corner style** (sharp / soft / rounded / pill). The plugin maps
+those to a `CheckoutTheme` partial and hands it to the widget as `WDK_PAY.theme`,
+so a merchant re-skins the checkout to match their storefront entirely from the
+admin — leave a color blank to keep the WDK default. The rest of the merchant
+payment settings (method title/description, chain, **asset USDt/XAUt**, RPC,
+confirmations, window) live in the same admin screen.
 
 ## x402 — charge bots, crawlers & AI agents
 
