@@ -22,6 +22,10 @@
     "./subscriptions": {
       "types": "./dist/subscriptions.d.ts",
       "default": "./dist/subscriptions.js"
+    },
+    "./swap": {
+      "types": "./dist/swap.d.ts",
+      "default": "./dist/swap.js"
     }
   },
   "files": [

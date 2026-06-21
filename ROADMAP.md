@@ -52,8 +52,14 @@
    priced in any currency can quote into the settlement token. No price source is
    hard-coded. (`@tetherto/wdk-pricing-*` is not yet published; swap a RateSource
    adapter in when it is.)
-6. **Swap-to-settle** (`@tetherto/wdk-protocol-swap-velora-evm`) — accept any token,
-   settle to the merchant in USDt automatically.
+6. ✅ **Swap-to-settle** (`@tetherto/wdk-protocol-swap-velora-evm`) — done (plan +
+   seams). A new `wdk-checkout/swap` module models it as an **exact-output** swap:
+   the merchant receives exactly the order amount of USDt while the customer pays
+   a variable amount of their chosen token, capped by slippage. It owns the exact
+   (BigInt) plan math — `maxPayAmountBase` (input cap), pinned output, deadline —
+   behind a pluggable `SwapQuoteProvider` (wire Velora/0x/1inch; the WDK wallet
+   bundles the Velora protocol for execution). After the swap the merchant still
+   gets a plain USDt `Transfer`, so the existing on-chain verifier is unchanged.
 7. **Refunds & partial captures**; ✅ **subscriptions** (recurring EIP-3009 auths) —
    done. A new `wdk-checkout/subscriptions` module models a subscription as a
    schedule of per-period EIP-3009 authorizations: each charge has its own
