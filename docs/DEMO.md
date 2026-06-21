@@ -31,12 +31,25 @@ Show a complete payment flow from cart to confirmation. Target ~3 minutes.
 **2:30 — Pay manually (20s)**
 - Briefly show the **Pay manually** tab: the receiving address + QR, and the "paste your transaction hash" confirmation path (for mobile/any-wallet payments).
 
-**2:50 — Architecture (15s)**
-- Flash the diagram from the README.
-- *"A WooCommerce gateway plus a headless WDK checkout widget, with on-chain verification. Gasless EIP-3009 payments are supported via the wdk-protocol-eip3009 module."*
+**2:50 — Multi-asset + agentic payments (25s)**
+- In **WooCommerce → WDK Pay settings**, show the **Accepted asset** dropdown — **USDt or XAUt** (Tether Gold) — and the chain selector. *"Merchants settle in USDt or gold-backed XAUt; the widget verifies whichever asset on-chain."*
+- One line on **x402**: *"The same on-chain verification powers an x402 facilitator and a Cloudflare Worker that charge AI bots and crawlers per request — humans and search engines pass for free, scrapers pay."* (Show `examples/cloudflare-x402-worker.js`.)
 
-**3:05 — Outro (10s)**
+**3:15 — Architecture (15s)**
+- Flash the diagram from the README.
+- *"A WooCommerce gateway plus a headless, **themeable** WDK checkout widget, with on-chain verification. Gasless EIP-3009 payments via wdk-protocol-eip3009."*
+
+**3:30 — Outro (10s)**
 - *"Open source, MIT, documented for non-specialist merchants. Self-custodial commerce on WDK."* Show the GitHub URL.
+
+## Verifying the new features
+
+- **Multi-asset** — toggle USDt/XAUt in the gateway settings; the intent + verifier
+  resolve the asset's token/decimals (all four PHP files pass `php -l`).
+- **Themeable widget** — pass `theme` to `mountCheckout` (see README "Customization").
+- **x402** — `cd packages/wdk-checkout && npm test` covers the facilitator
+  (sign→verify + rejection paths); deploy `examples/cloudflare-x402-worker.js`
+  with your `PAY_TO` + asset to charge bots live.
 
 ## Tips
 - Use testnet throughout; never show a real seed.
