@@ -31,6 +31,14 @@ export interface PaymentIntent {
   readonly status: 'pending' | 'confirmed'
   /** Unix seconds after which the payment window closes. */
   readonly expiresAt: number
+  /**
+   * Optional store-currency total for display, e.g. "19.99". When present with
+   * {@link currency}, the widget shows the familiar fiat price alongside the
+   * on-chain token amount. The on-chain amount remains {@link amountBase}.
+   */
+  readonly displayTotal?: string
+  /** Optional ISO-4217 store currency for {@link displayTotal}, e.g. "USD". */
+  readonly currency?: string
 }
 
 /** The full config object the merchant page exposes as `window.WDK_PAY`. */

@@ -10,3 +10,8 @@ export { qrDataUrl } from './qr.js'
 export { getEthers, getInjectedProvider, toHexChainId } from './eth.js'
 export type { PaymentIntent, WdkPayConfig, EthereumProvider, PaymentStatus, CheckoutTheme } from './types.js'
 export { DEFAULT_CHECKOUT_THEME } from './types.js'
+export {
+  formatFiat, formatTokenAmount, fiatToTokenBase,
+  staticRate, endpointRate, quoteTokenBase, fiatDisplayLine
+} from './pricing.js'
+export type { FiatPrice, RateSource, FiatDisplayIntent } from './pricing.js'

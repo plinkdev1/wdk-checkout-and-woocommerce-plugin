@@ -43,8 +43,15 @@
 
 ## ⏳ Phase 3 — Merchant economics
 
-5. **Fiat pricing display** (`@tetherto/wdk-pricing-*`) — show prices/totals in the
-   store's fiat currency, lock a quote for the checkout window.
+5. ✅ **Fiat pricing display** — done (display + conversion). The widget now shows
+   the familiar store-currency price (e.g. "$19.99") above the on-chain token
+   amount, driven by `displayTotal` + `currency` on the intent. A new
+   dependency-free `wdk-checkout/pricing` module provides exact base-unit
+   conversion/formatting and a **pluggable** `RateSource` (`staticRate` for the
+   1:1 case, `endpointRate` to wire CoinGecko/Chainlink/your feed) so a store
+   priced in any currency can quote into the settlement token. No price source is
+   hard-coded. (`@tetherto/wdk-pricing-*` is not yet published; swap a RateSource
+   adapter in when it is.)
 6. **Swap-to-settle** (`@tetherto/wdk-protocol-swap-velora-evm`) — accept any token,
    settle to the merchant in USDt automatically.
 7. **Refunds & partial captures**; **subscriptions** (recurring EIP-3009 auths).

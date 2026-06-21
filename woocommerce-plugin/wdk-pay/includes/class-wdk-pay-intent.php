@@ -131,6 +131,10 @@ class WDK_Pay_Intent {
 			'reference'        => self::reference_for( $this->order ),
 			'status'           => $status,
 			'expiresAt'        => $this->expires_at( $window_minutes ),
+			// Fiat display: the familiar store-currency total shown next to the
+			// on-chain token amount. The settled amount is still amountBase.
+			'displayTotal'     => $this->format_amount( (string) $this->order->get_total(), 2 ),
+			'currency'         => (string) $this->order->get_currency(),
 		);
 	}
 

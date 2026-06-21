@@ -2,6 +2,7 @@ import type { CheckoutTheme, PaymentIntent, PaymentStatus, WdkPayConfig } from '
 import { DEFAULT_CHECKOUT_THEME } from './types.js'
 import { payIntent } from './usdt.js'
 import { qrDataUrl } from './qr.js'
+import { fiatDisplayLine } from './pricing.js'
 
 const TX_RE = /^0x[0-9a-fA-F]{64}$/
 
@@ -113,8 +114,12 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme): Dom {
   for (const [k, val] of Object.entries(vars)) container.style.setProperty(k, val)
 
   const amountCard = div({ background: 'var(--wp-surface)', color: 'var(--wp-on-surface)', borderRadius: 'var(--wp-radius)', padding: '20px', textAlign: 'center', marginBottom: '16px' })
+  // Familiar fiat price (e.g. "$19.99"), shown above the on-chain amount when
+  // the intent carries a store-currency total. The token amount is what settles.
+  const fiat = fiatDisplayLine(intent)
   amountCard.innerHTML = `
     <div style="font-size:13px;opacity:.75">Amount due</div>
+    ${fiat ? `<div style="font-size:15px;opacity:.85;margin-top:2px">${esc(fiat)}</div>` : ''}
     <div style="font-size:30px;font-weight:700;letter-spacing:-.5px">${esc(intent.amount)} ${esc(intent.tokenSymbol)}</div>
     <div style="font-size:12px;opacity:.7;margin-top:4px">on ${esc(intent.chainName)}</div>`
   container.appendChild(amountCard)
