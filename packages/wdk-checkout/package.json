@@ -26,6 +26,10 @@
     "./swap": {
       "types": "./dist/swap.d.ts",
       "default": "./dist/swap.js"
+    },
+    "./lightning": {
+      "types": "./dist/lightning.d.ts",
+      "default": "./dist/lightning.js"
     }
   },
   "files": [

@@ -29,6 +29,7 @@ This is that reference. It turns any WooCommerce store into a **self-custodial U
 | **`woocommerce-plugin/wdk-pay/`** | A complete WooCommerce **payment gateway plugin** (PHP): admin settings, the "Pay with USDt/XAUt" gateway, REST endpoints, and on-chain payment verification. |
 | **`packages/wdk-checkout/`** | A headless, **themeable** **checkout widget / SDK** (TypeScript): connect a wallet and pay, or pay manually and confirm by tx hash. Builds to a single asset the plugin loads. |
 | **`packages/wdk-checkout/x402`** | An **x402 facilitator** (TypeScript): verify per-request payments from bots/agents off-chain. |
+| **ecommerce-rail modules** | Pluggable SDK modules that extend checkout beyond a plain USDt transfer: **`/pricing`** (fiat display + conversion), **`/swap`** (swap-to-settle: pay any token, merchant gets USDt), **`/subscriptions`** (recurring EIP-3009 authorizations), **`/lightning`** (BOLT11 invoice + settle). Each is config-driven — you supply the rate feed / DEX quote / Lightning endpoint; no keys are hard-coded. |
 | **`examples/`** | A **Cloudflare Worker** + **Express middleware** that charge AI crawlers via x402 (humans + search engines pass free). |
 | **`docs/`** | Platform-selection rationale & architecture (the M1 deliverable), merchant setup, security model, and the demo script. |
 
@@ -160,11 +161,13 @@ settles it on-chain. See [`ROADMAP.md`](./ROADMAP.md).
 
 ## Roadmap
 
-📍 **Full phased roadmap: [`ROADMAP.md`](./ROADMAP.md).** It shows what ships today
-(self-custodial USDt checkout + on-chain verification + gasless EIP-3009) and
-sequences multi-asset/multi-chain checkout, **Lightning (Spark) instant payments**,
-fiat pricing, swap-to-settle, subscriptions/refunds, more platforms (Shopify,
-Magento), and fiat on-ramp — against real, published `@tetherto/*` packages.
+📍 **Full phased roadmap: [`ROADMAP.md`](./ROADMAP.md).** Shipping today:
+self-custodial USDt/XAUt checkout + on-chain verification + gasless EIP-3009, the
+x402 facilitator, and the four ecommerce-rail SDK modules — **fiat pricing
+display**, **swap-to-settle**, **subscriptions** (recurring EIP-3009), and
+**Lightning (Spark)** invoice/settle. Still sequenced: multi-chain auto-detect,
+refunds/partial captures, more platforms (Shopify, Magento), and fiat on-ramp —
+against real `@tetherto/*` packages.
 
 ---
 

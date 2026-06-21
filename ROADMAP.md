@@ -30,8 +30,15 @@
    checkout widget is already asset-agnostic. Next: USDC + per-product currency.
 2. **Multi-chain auto-detect** — let the shopper pay on any supported EVM chain;
    the gateway verifies on whichever chain the tx landed.
-3. **Lightning (Spark) checkout** (`@tetherto/wdk-wallet-spark`) — instant,
-   low-fee BTC payments are a natural fit for retail; invoice + settle flow.
+3. ✅ **Lightning (Spark) checkout** (`@tetherto/wdk-wallet-spark`) — done
+   (invoice + settle rail). A new `wdk-checkout/lightning` module handles the
+   merchant side: mint a BOLT11 invoice for the order, then poll to settlement.
+   Backends are pluggable via a `LightningProvider`; `createLightningClient`
+   wires a generic REST endpoint (injectable fetch, tolerant parsers for
+   Spark/LNbits/LND-REST) and `pollInvoice` drives it to a paid/expired terminal
+   state. Sats helpers (`satsForFiat`, `btcToSats`, `formatSats`) price the
+   order. The customer pays from any Lightning wallet (incl. a WDK Spark wallet);
+   no node URL/key is hard-coded.
 4. **Bitcoin on-chain** — accept BTC via the engine's BIP-84 support.
 
 5. ✅ **x402 — charge bots/agents/crawlers** — an HTTP 402 facilitator
