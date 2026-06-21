@@ -208,12 +208,26 @@ class WDK_Pay_REST {
 		}
 
 		$settings      = $gateway->get_resolved_settings();
-		$token_address = $settings['token_address'];
 		$to_address    = $settings['receiving_address'];
 		$confirmations = (int) $settings['confirmations'];
 
-		// Required amount in base units from the order total.
-		$min_amount_base = WDK_Pay_Intent::to_base_units( (string) $order->get_total(), WDK_Pay_Intent::DECIMALS );
+		// Resolve the accepted asset (token + decimals) exactly as the intent does,
+		// so verification matches what the customer was asked to pay (USDt or XAUt).
+		$chain_key = isset( $settings['chain'] ) ? (string) $settings['chain'] : 'ethereum';
+		$asset_key = isset( $settings['asset'] ) ? (string) $settings['asset'] : 'usdt';
+		$asset     = WDK_Pay_Chains::asset( $chain_key, $asset_key );
+		$decimals  = ( $asset && isset( $asset['decimals'] ) ) ? (int) $asset['decimals'] : WDK_Pay_Intent::DECIMALS;
+
+		if ( ! empty( $settings['token_address'] ) ) {
+			$token_address = (string) $settings['token_address'];
+		} elseif ( $asset && ! empty( $asset['token'] ) ) {
+			$token_address = (string) $asset['token'];
+		} else {
+			$token_address = WDK_Pay_Chains::token_for( $chain_key );
+		}
+
+		// Required amount in base units from the order total, in the asset's decimals.
+		$min_amount_base = WDK_Pay_Intent::to_base_units( (string) $order->get_total(), $decimals );
 
 		// Record the submitted hash early so /status reflects an in-flight attempt.
 		$this->store_pending_attempt( $order, $tx_hash, $from );

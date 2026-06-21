@@ -93,17 +93,25 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 			'chain'              => array(
 				'title'       => __( 'Settlement chain', 'wdk-pay' ),
 				'type'        => 'select',
-				'description' => __( 'The EVM chain on which USDt payments are made and verified.', 'wdk-pay' ),
+				'description' => __( 'The EVM chain on which payments are made and verified.', 'wdk-pay' ),
 				'default'     => 'ethereum',
 				'options'     => WDK_Pay_Chains::options(),
 				'desc_tip'    => true,
 			),
+			'asset'              => array(
+				'title'       => __( 'Accepted asset', 'wdk-pay' ),
+				'type'        => 'select',
+				'description' => __( 'The Tether asset customers pay with. XAUt (Tether Gold) settles on Ethereum; on chains where the selected asset is not deployed, the gateway falls back to USDt.', 'wdk-pay' ),
+				'default'     => 'usdt',
+				'options'     => WDK_Pay_Chains::asset_options(),
+				'desc_tip'    => true,
+			),
 			'token_address'      => array(
-				'title'       => __( 'USDt token address (override)', 'wdk-pay' ),
+				'title'       => __( 'Token address (override)', 'wdk-pay' ),
 				'type'        => 'text',
-				'description' => __( 'Optional. Override the default USDt contract address for the selected chain. Leave blank to use the built-in default.', 'wdk-pay' ),
+				'description' => __( 'Optional. Override the contract address for the selected chain/asset. Leave blank to use the built-in default.', 'wdk-pay' ),
 				'default'     => '',
-				'placeholder' => __( 'Defaults to the chain’s USDt contract', 'wdk-pay' ),
+				'placeholder' => __( 'Defaults to the chain’s asset contract', 'wdk-pay' ),
 				'desc_tip'    => true,
 			),
 			'rpc_url'            => array(
@@ -164,6 +172,7 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 	 * @return array{
 	 *     receiving_address:string,
 	 *     chain:string,
+	 *     asset:string,
 	 *     token_address:string,
 	 *     rpc_url:string,
 	 *     confirmations:int,
@@ -178,12 +187,22 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 			$chain = 'ethereum';
 		}
 
+		$asset_key = (string) $this->get_option( 'asset', 'usdt' );
+		$asset     = WDK_Pay_Chains::asset( $chain, $asset_key );
+
 		$token_override = trim( (string) $this->get_option( 'token_address', '' ) );
-		$token_address  = '' !== $token_override ? $token_override : WDK_Pay_Chains::token_for( $chain );
+		if ( '' !== $token_override ) {
+			$token_address = $token_override;
+		} elseif ( $asset && ! empty( $asset['token'] ) ) {
+			$token_address = (string) $asset['token'];
+		} else {
+			$token_address = WDK_Pay_Chains::token_for( $chain );
+		}
 
 		return array(
 			'receiving_address' => trim( (string) $this->get_option( 'receiving_address', '' ) ),
 			'chain'             => $chain,
+			'asset'             => $asset_key,
 			'token_address'     => $token_address,
 			'rpc_url'           => trim( (string) $this->get_option( 'rpc_url', '' ) ),
 			'confirmations'     => max( 1, (int) $this->get_option( 'confirmations', 1 ) ),

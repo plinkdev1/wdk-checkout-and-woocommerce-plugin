@@ -21,9 +21,13 @@
 - Zero-setup demo (`examples/checkout-demo.html`), `docs/ARCHITECTURE.md` (M1),
   merchant setup, security model, media.
 
-## ⏳ Phase 2 — More assets & rails at checkout
+## 🚧 Phase 2 — More assets & rails at checkout
 
-1. **XAUt + multi-stablecoin** — accept USDt/USDC/XAUt; per-product currency.
+1. ✅ **Multi-asset (USDt + XAUt)** — the gateway now offers an **Accepted asset**
+   setting (USDt — Tether USD / XAUt — Tether Gold). The chain registry carries a
+   per-chain asset map (token + decimals); the intent and on-chain verifier resolve
+   the chosen asset, falling back to USDt on chains where it isn't deployed. The
+   checkout widget is already asset-agnostic. Next: USDC + per-product currency.
 2. **Multi-chain auto-detect** — let the shopper pay on any supported EVM chain;
    the gateway verifies on whichever chain the tx landed.
 3. **Lightning (Spark) checkout** (`@tetherto/wdk-wallet-spark`) — instant,

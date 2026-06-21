@@ -90,16 +90,24 @@ class WDK_Pay_Intent {
 			$chain     = WDK_Pay_Chains::get( $chain_key );
 		}
 
-		// Token address: explicit override wins, otherwise the chain default.
+		// Resolve the accepted asset on this chain (USDt by default; XAUt where deployed).
+		$asset_key = isset( $this->settings['asset'] ) ? (string) $this->settings['asset'] : 'usdt';
+		$asset     = WDK_Pay_Chains::asset( $chain_key, $asset_key );
+		$decimals  = ( $asset && isset( $asset['decimals'] ) ) ? (int) $asset['decimals'] : self::DECIMALS;
+		$symbol    = ( $asset && isset( $asset['symbol'] ) ) ? (string) $asset['symbol'] : self::TOKEN_SYMBOL;
+
+		// Token address: explicit override wins, otherwise the resolved asset / chain default.
 		$token_address = '';
 		if ( ! empty( $this->settings['token_address'] ) ) {
 			$token_address = (string) $this->settings['token_address'];
+		} elseif ( $asset && ! empty( $asset['token'] ) ) {
+			$token_address = (string) $asset['token'];
 		} else {
 			$token_address = $chain['token'];
 		}
 
-		$amount_human = $this->format_amount( (string) $this->order->get_total() );
-		$amount_base  = self::to_base_units( (string) $this->order->get_total(), self::DECIMALS );
+		$amount_human = $this->format_amount( (string) $this->order->get_total(), $decimals );
+		$amount_base  = self::to_base_units( (string) $this->order->get_total(), $decimals );
 
 		$window_minutes = isset( $this->settings['payment_window'] ) ? (int) $this->settings['payment_window'] : 30;
 		if ( $window_minutes <= 0 ) {
@@ -113,9 +121,9 @@ class WDK_Pay_Intent {
 			'orderKey'         => (string) $this->order->get_order_key(),
 			'amount'           => $amount_human,
 			'amountBase'       => $amount_base,
-			'decimals'         => self::DECIMALS,
+			'decimals'         => $decimals,
 			'tokenAddress'     => $token_address,
-			'tokenSymbol'      => self::TOKEN_SYMBOL,
+			'tokenSymbol'      => $symbol,
 			'chainId'          => (int) $chain['chainId'],
 			'chainName'        => (string) $chain['name'],
 			'chainKey'         => (string) $chain['key'],
@@ -148,11 +156,12 @@ class WDK_Pay_Intent {
 	 * @param string $amount Decimal amount string.
 	 * @return string Normalised decimal string (e.g. "19.99").
 	 */
-	private function format_amount( $amount ) {
-		$amount = self::sanitize_decimal( $amount );
+	private function format_amount( $amount, $decimals = self::DECIMALS ) {
+		$amount   = self::sanitize_decimal( $amount );
+		$decimals = max( 0, (int) $decimals );
 
 		// number_format gives a stable, locale-independent representation.
-		return number_format( (float) $amount, self::DECIMALS, '.', '' );
+		return number_format( (float) $amount, $decimals, '.', '' );
 	}
 
 	/**

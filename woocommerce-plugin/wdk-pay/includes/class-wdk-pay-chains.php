@@ -39,6 +39,18 @@ class WDK_Pay_Chains {
 				'chainId'  => 1,
 				'token'    => '0xdAC17F958D2ee523a2206206994597C13D831ec7',
 				'explorer' => 'https://etherscan.io',
+				'assets'   => array(
+					'usdt' => array(
+						'symbol'   => 'USDt',
+						'decimals' => 6,
+						'token'    => '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+					),
+					'xaut' => array(
+						'symbol'   => 'XAUt',
+						'decimals' => 6,
+						'token'    => '0x68749665FF8D2d112Fa859AA293F07A622782F38',
+					),
+				),
 			),
 			'polygon'  => array(
 				'key'      => 'polygon',
@@ -46,6 +58,13 @@ class WDK_Pay_Chains {
 				'chainId'  => 137,
 				'token'    => '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
 				'explorer' => 'https://polygonscan.com',
+				'assets'   => array(
+					'usdt' => array(
+						'symbol'   => 'USDt',
+						'decimals' => 6,
+						'token'    => '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+					),
+				),
 			),
 			'arbitrum' => array(
 				'key'      => 'arbitrum',
@@ -53,8 +72,55 @@ class WDK_Pay_Chains {
 				'chainId'  => 42161,
 				'token'    => '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
 				'explorer' => 'https://arbiscan.io',
+				'assets'   => array(
+					'usdt' => array(
+						'symbol'   => 'USDt',
+						'decimals' => 6,
+						'token'    => '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+					),
+				),
 			),
 		);
+	}
+
+	/**
+	 * Human labels for every asset the plugin knows about, for admin <select>s.
+	 * Availability is per-chain (see {@see asset()}); XAUt settles on Ethereum.
+	 *
+	 * @return array<string,string> Map of asset key => label.
+	 */
+	public static function asset_options() {
+		return array(
+			'usdt' => 'USDt — Tether USD',
+			'xaut' => 'XAUt — Tether Gold',
+		);
+	}
+
+	/**
+	 * Resolve an asset on a chain. Falls back to the chain's USDt when the
+	 * requested asset isn't deployed there, so a global "asset" setting can't
+	 * strand a chain that lacks it.
+	 *
+	 * @param string $chain_key Chain key (e.g. "ethereum").
+	 * @param string $asset_key Asset key (e.g. "usdt", "xaut").
+	 * @return array{symbol:string,decimals:int,token:string}|null Asset, or null when the chain is unknown.
+	 */
+	public static function asset( $chain_key, $asset_key ) {
+		$chain = self::get( $chain_key );
+
+		if ( null === $chain ) {
+			return null;
+		}
+
+		$asset_key = is_string( $asset_key ) ? strtolower( trim( $asset_key ) ) : 'usdt';
+		$assets    = isset( $chain['assets'] ) ? $chain['assets'] : array();
+
+		if ( isset( $assets[ $asset_key ] ) ) {
+			return $assets[ $asset_key ];
+		}
+
+		// Requested asset not on this chain — fall back to USDt.
+		return isset( $assets['usdt'] ) ? $assets['usdt'] : null;
 	}
 
 	/**
