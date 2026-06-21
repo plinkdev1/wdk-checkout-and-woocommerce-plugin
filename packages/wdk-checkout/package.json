@@ -1,7 +1,7 @@
 {
   "name": "wdk-checkout",
   "version": "1.0.0",
-  "description": "Headless WDK checkout widget — self-custodial USDt payments for ecommerce. Powers the WooCommerce 'WDK Pay' gateway and works standalone.",
+  "description": "Headless WDK checkout widget \u2014 self-custodial USDt payments for ecommerce. Powers the WooCommerce 'WDK Pay' gateway and works standalone.",
   "type": "module",
   "license": "MIT",
   "main": "./dist/index.js",
@@ -16,7 +16,10 @@
       "default": "./dist/x402.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "npm run build:types && npm run build:widget",
     "build:types": "tsc",
@@ -31,9 +34,14 @@
     "esbuild": "0.28.1",
     "ethers": "6.14.3",
     "typescript": "5.5.4",
-    "vitest": "2.1.8"
+    "vitest": "^3.2.6"
   },
   "engines": {
     "node": ">=20"
+  },
+  "overrides": {
+    "vitest": "^3.2.6",
+    "vite": ">=6.4.3 <7",
+    "ws": ">=8.21.0"
   }
 }
