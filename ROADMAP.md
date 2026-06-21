@@ -64,3 +64,9 @@ Part of the WDK reference suite — see the
 [Template Wallet](https://github.com/plinkdev1/wdk-wallet-template/blob/main/ROADMAP.md),
 and [EIP-3009 module](https://github.com/plinkdev1/wdk-protocol-eip3009/blob/main/ROADMAP.md)
 roadmaps.
+
+
+## Customization & presentation follow-ups
+
+- **Merchant color settings in the WooCommerce admin** — the widget is already themeable via `CheckoutTheme` (pass `theme` to `mountCheckout`); a small set of admin color fields (accent/surface) could feed that `theme` so merchants re-skin without code. See `docs`/README "Customization".
+- **Capture screenshots** of XAUt checkout + the x402 Worker flow, add to `media/screenshots/` + README.
