@@ -18,6 +18,10 @@
     "./pricing": {
       "types": "./dist/pricing.d.ts",
       "default": "./dist/pricing.js"
+    },
+    "./subscriptions": {
+      "types": "./dist/subscriptions.d.ts",
+      "default": "./dist/subscriptions.js"
     }
   },
   "files": [

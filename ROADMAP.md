@@ -54,7 +54,15 @@
    adapter in when it is.)
 6. **Swap-to-settle** (`@tetherto/wdk-protocol-swap-velora-evm`) — accept any token,
    settle to the merchant in USDt automatically.
-7. **Refunds & partial captures**; **subscriptions** (recurring EIP-3009 auths).
+7. **Refunds & partial captures**; ✅ **subscriptions** (recurring EIP-3009 auths) —
+   done. A new `wdk-checkout/subscriptions` module models a subscription as a
+   schedule of per-period EIP-3009 authorizations: each charge has its own
+   time-boxed `validAfter`..`validBefore` window and a unique deterministic nonce,
+   so a period can only be claimed during that period and exactly once. The
+   customer signs each charge's typed data; the merchant relayer settles the due
+   charge through the **same** `transferWithAuthorization` path as x402
+   (`settleExactPayment`). Self-custodial — nothing auto-charges without a
+   customer signature. (Refunds/partial-captures still open.)
 
 ## ⏳ Phase 4 — Platform breadth
 
