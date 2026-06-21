@@ -12,8 +12,7 @@
  * Pairs with the WDK wallet's x402 client (which produces the X-PAYMENT header)
  * and @tetherto/wdk-protocol-eip3009 (the on-chain settlement primitive).
  */
-import { verifyTypedData, getAddress } from 'ethers';
-
+import { verifyTypedData, getAddress, Contract, JsonRpcProvider, Wallet, Signature } from 'ethers';
 export const X402_VERSION = 1;
 export const SCHEME_EXACT = 'exact';
 
@@ -175,4 +174,50 @@ export function verifyExactPayment(payment: X402Payment, requirements: X402Requi
   if (Number(a.validAfter) > now) return fail('not_yet_valid');
 
   return { isValid: true, payer: getAddress(signer), invalidReason: null };
+}
+
+/** Result of settling an x402 payment on-chain. */
+export interface SettleResult {
+  txHash: string;
+  payer: string;
+}
+
+const TRANSFER_WITH_AUTHORIZATION_ABI = [
+  'function transferWithAuthorization(address from,address to,uint256 value,uint256 validAfter,uint256 validBefore,bytes32 nonce,uint8 v,bytes32 r,bytes32 s)',
+];
+
+/**
+ * Settle a verified x402 "exact" payment on-chain: submit the EIP-3009
+ * `transferWithAuthorization` so the funds move from the payer to `payTo`. A
+ * **relayer** (the merchant or a facilitator) pays the gas — the payer's
+ * signature is gasless. Verify first with {@link verifyExactPayment}.
+ *
+ * This is the optional on-chain half of a facilitator; the off-chain
+ * {@link verifyExactPayment} is enough to *gate access* cheaply at the edge.
+ *
+ * @param payment - The decoded x402 payment.
+ * @param requirements - The PaymentRequirements it satisfies (gives the asset).
+ * @param opts.rpcUrl - JSON-RPC endpoint for the payment's network.
+ * @param opts.relayerPrivateKey - Key that pays gas (NOT the payer; never the
+ *   payer's key). Keep it server-side.
+ * @returns The settlement tx hash + the payer address.
+ */
+export async function settleExactPayment(
+  payment: X402Payment,
+  requirements: X402Requirements,
+  opts: { rpcUrl: string; relayerPrivateKey: string },
+): Promise<SettleResult> {
+  const v = verifyExactPayment(payment, requirements);
+  if (!v.isValid || !v.payer) throw new Error(`x402 settle: payment is invalid (${v.invalidReason}).`);
+
+  const a = payment.payload.authorization;
+  const sig = Signature.from(payment.payload.signature);
+  const provider = new JsonRpcProvider(opts.rpcUrl);
+  const relayer = new Wallet(opts.relayerPrivateKey, provider);
+  const token = new Contract(requirements.asset, TRANSFER_WITH_AUTHORIZATION_ABI, relayer);
+
+  const tx = await token.transferWithAuthorization!(
+    a.from, a.to, a.value, a.validAfter, a.validBefore, a.nonce, sig.v, sig.r, sig.s,
+  );
+  return { txHash: tx.hash as string, payer: v.payer };
 }

@@ -121,10 +121,11 @@ USDt/XAUt**, RPC, confirmations, window) are configured in the WooCommerce admin
 This repo also ships the **server side of [x402](#)** — monetize automated
 traffic per request:
 
-- **`wdk-checkout/x402`** — a facilitator: `buildPaymentRequirements` /
-  `buildPaymentRequiredResponse` (the 402 challenge), `decodePaymentHeader`, and
+- **`wdk-checkout/x402`** — a full facilitator: `buildPaymentRequirements` /
+  `buildPaymentRequiredResponse` (the 402 challenge), `decodePaymentHeader`,
   `verifyExactPayment` (recovers the EIP-3009 signer off-chain — no keys, no RPC,
-  edge-safe).
+  edge-safe), and `settleExactPayment` (submits the authorization on-chain via a
+  relayer, so the payer pays gaslessly — the optional verify→settle loop).
 - **`examples/cloudflare-x402-worker.js`** — a reverse proxy for the
   Netlify-behind-Cloudflare case: humans + verified search engines pass through,
   AI scrapers get a 402 and pay; funds go straight to your address.
