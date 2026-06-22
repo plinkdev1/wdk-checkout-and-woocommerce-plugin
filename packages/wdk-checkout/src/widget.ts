@@ -3,6 +3,7 @@ import { DEFAULT_CHECKOUT_THEME } from './types.js'
 import { payIntent } from './usdt.js'
 import { qrDataUrl } from './qr.js'
 import { fiatDisplayLine } from './pricing.js'
+import { createTokenIcon } from './token-icon.js'
 
 const TX_RE = /^0x[0-9a-fA-F]{64}$/
 
@@ -131,9 +132,18 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme): Dom {
   const fiat = fiatDisplayLine(intent)
   amountCard.innerHTML = `
     <div style="font-size:13px;opacity:.75">Amount due</div>
-    ${fiat ? `<div style="font-size:15px;opacity:.85;margin-top:2px">${esc(fiat)}</div>` : ''}
-    <div style="font-size:30px;font-weight:700;letter-spacing:-.5px">${esc(intent.amount)} ${esc(intent.tokenSymbol)}</div>
-    <div style="font-size:12px;opacity:.7;margin-top:4px">on ${esc(intent.chainName)}</div>`
+    ${fiat ? `<div style="font-size:15px;opacity:.85;margin-top:2px">${esc(fiat)}</div>` : ''}`
+  // Amount line with the payment token's REAL @web3icons logo (chip fallback for
+  // unknown tokens). textContent keeps it XSS-safe without manual escaping.
+  const amountRow = div({ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '30px', fontWeight: '700', letterSpacing: '-.5px', marginTop: '2px' })
+  amountRow.appendChild(createTokenIcon(intent.tokenSymbol, 28))
+  const amountText = document.createElement('span')
+  amountText.textContent = `${intent.amount} ${intent.tokenSymbol}`
+  amountRow.appendChild(amountText)
+  amountCard.appendChild(amountRow)
+  const chainLine = div({ fontSize: '12px', opacity: '.7', marginTop: '4px' })
+  chainLine.textContent = `on ${intent.chainName}`
+  amountCard.appendChild(chainLine)
   container.appendChild(amountCard)
 
   const tabBar = div({ display: 'flex', gap: '6px', marginBottom: '14px' })

@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   headless `useWdkPayment(config)` hook returning `{ status, error, txHash, pay,
   confirmByHash, reset }`. `react` is an optional peer dependency; the package
   root never imports React.
+- **Token icons (full `@web3icons`)** — the widget shows the payment token's
+  real logo from the full ~4000-token `@web3icons` catalog, loaded by symbol at
+  runtime (no icons bundled), with a deterministic colored-chip fallback so any
+  merchant-configured or unknown token renders cleanly — never a broken image.
+  New exports: `createTokenIcon`, `tokenIconUrl`, `tokenChipDataUri`, and
+  `configureTokenIcons` (pin a version / self-host the icon set).
 - **EIP-6963 wallet discovery** — the payment path now discovers installed
   wallets via EIP-6963 and prefers the **WDK wallet extension** (rdns
   `app.wdkstarter.wallet`), so buyers without MetaMask can pay; falls back to

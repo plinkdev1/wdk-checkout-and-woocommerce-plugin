@@ -7,6 +7,7 @@
 export { mountCheckout } from './widget.js'
 export { payIntent, connectWallet, ensureChain, ERC20_ABI } from './usdt.js'
 export { qrDataUrl } from './qr.js'
+export { createTokenIcon, tokenIconUrl, tokenChipDataUri, configureTokenIcons } from './token-icon.js'
 export {
   getEthers, getInjectedProvider, toHexChainId,
   discoverWallets, resolveWalletProvider, WDK_WALLET_RDNS,
