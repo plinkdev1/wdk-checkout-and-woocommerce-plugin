@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   headless `useWdkPayment(config)` hook returning `{ status, error, txHash, pay,
   confirmByHash, reset }`. `react` is an optional peer dependency; the package
   root never imports React.
+- **EIP-6963 wallet discovery** — the payment path now discovers installed
+  wallets via EIP-6963 and prefers the **WDK wallet extension** (rdns
+  `app.wdkstarter.wallet`), so buyers without MetaMask can pay; falls back to
+  the legacy `window.ethereum`. New exports: `discoverWallets()`,
+  `resolveWalletProvider()`, `WDK_WALLET_RDNS`.
 
 ### Changed
 

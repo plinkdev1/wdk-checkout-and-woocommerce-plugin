@@ -7,7 +7,11 @@
 export { mountCheckout } from './widget.js'
 export { payIntent, connectWallet, ensureChain, ERC20_ABI } from './usdt.js'
 export { qrDataUrl } from './qr.js'
-export { getEthers, getInjectedProvider, toHexChainId } from './eth.js'
+export {
+  getEthers, getInjectedProvider, toHexChainId,
+  discoverWallets, resolveWalletProvider, WDK_WALLET_RDNS,
+} from './eth.js'
+export type { Eip6963ProviderInfo, Eip6963ProviderDetail } from './eth.js'
 export {
   CheckoutError, isCheckoutError, toCheckoutError,
   PAYMENT_TRANSITIONS, canTransition,
