@@ -1,0 +1,95 @@
+<!doctype html>
+<!--
+  Mount the WDK checkout widget in a plain HTML page.
+
+  The widget is headless and framework-free. In production your merchant
+  back-end produces the PaymentIntent and the confirm/status endpoints; here we
+  hard-code a sample intent so the widget runs standalone with no server.
+
+  TWO WAYS TO LOAD IT:
+
+  A) Pre-built IIFE (what this file uses, and what the WooCommerce plugin does).
+     The bundle auto-mounts into #wdk-pay-root by reading window.WDK_PAY. Build
+     it once from the package root:
+         cd packages/wdk-checkout && npm run build
+     …which writes ../../woocommerce-plugin/wdk-pay/assets/js/wdk-checkout.js
+     (the <script src> below). Then open this file in a browser.
+
+  B) ES module (any bundler / dev server):
+         import { mountCheckout } from '@wdk-starter/wdk-checkout'
+         const teardown = mountCheckout(document.getElementById('checkout'), {
+           intent, endpoints: { confirm: '/confirm', status: '/status' },
+           nonce: '…', returnUrl: '/order-received',
+           theme: { accent: '#0D9488', surface: '#0B1F1C', onSurface: '#E6FFFA', radius: '10px' },
+         })
+         // call teardown() to unmount (stops timers, clears the redirect timer).
+
+  NOTE: window.WDK_PAY.theme is a Partial<CheckoutTheme>; any keys you omit fall
+  back to DEFAULT_CHECKOUT_THEME. "Pay with wallet" needs an injected EVM wallet
+  and ethers on the page (the plugin loads ethers UMD; stubbed here for the demo).
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WDK Checkout — mount-widget example</title>
+  <style>
+    body { margin: 0; background: #f4f1ee; font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #161312; }
+    .wrap { max-width: 480px; margin: 0 auto; padding: 40px 20px; }
+    h1 { font-size: 18px; margin: 0 0 16px; }
+    .card { background: #fff; border: 1px solid #e7e2dc; border-radius: 16px; padding: 22px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Mount the checkout widget</h1>
+    <div class="card">
+      <!-- The auto-mount bundle renders the widget into this element. -->
+      <div id="wdk-pay-root"></div>
+    </div>
+  </div>
+
+  <script>
+    // 1) The merchant config. Your back-end injects this; the WooCommerce plugin
+    //    localizes it onto the page as window.WDK_PAY. Shape = WdkPayConfig.
+    window.WDK_PAY = {
+      // PaymentIntent — all amounts are token base units (integer strings).
+      intent: {
+        orderId: 1234,
+        orderKey: 'wc_order_demo1234',     // doubles as the payment capability token
+        amount: '19.99',                   // human amount for display
+        amountBase: '19990000',            // 19.99 USDt @ 6 decimals
+        decimals: 6,
+        tokenAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7', // USDt on Ethereum
+        tokenSymbol: 'USDt',
+        chainId: 1,
+        chainName: 'Ethereum',
+        chainKey: 'ethereum',
+        receivingAddress: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+        reference: '0xab9f1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b',
+        status: 'pending',                 // 'pending' | 'confirmed'
+        expiresAt: Math.floor(Date.now() / 1000) + 1800, // 30-minute window
+        // optional fiat display (shown above the token amount):
+        displayTotal: '19.99',
+        currency: 'USD',
+      },
+      // The widget POSTs the tx hash to `confirm` and reads `status`; '#' is a
+      // no-op for this offline demo.
+      endpoints: { confirm: '#', status: '#' },
+      nonce: 'demo-nonce',                 // sent as the X-WP-Nonce header
+      returnUrl: '#',                      // redirected here once confirmed
+      // optional block-explorer base for tx links:
+      // explorer: 'https://etherscan.io',
+      // Partial<CheckoutTheme> — re-skin to your storefront; omitted keys use the default.
+      theme: { accent: '#0D9488', surface: '#0B1F1C', onSurface: '#E6FFFA', radius: '10px' },
+    }
+
+    // ethers is loaded by the plugin (UMD) and only used on "Pay with wallet".
+    // Stubbed here so the UI renders without a wallet for the demo.
+    window.ethers = window.ethers || {}
+  </script>
+
+  <!-- The built auto-mount bundle (run `npm run build` to generate it). -->
+  <script src="../../../woocommerce-plugin/wdk-pay/assets/js/wdk-checkout.js"></script>
+</body>
+</html>
