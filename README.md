@@ -55,7 +55,7 @@ The payment is a **direct, peer-to-peer ERC-20 transfer**. The plugin never touc
 
 ### Optional: gasless payments (EIP-3009)
 
-For customers with no native gas token, the checkout can use **EIP-3009 `transferWithAuthorization`**: the customer *signs* a transfer (free), and the merchant's relayer submits it and pays gas. That path is implemented by the companion module **[`wdk-protocol-eip3009`](https://github.com/plinkdev1/wdk-protocol-eip3009)** — see [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md#gasless).
+For customers with no native gas token, the checkout can use **EIP-3009 `transferWithAuthorization`**: the customer *signs* a transfer (free), and the merchant's relayer submits it and pays gas. That path is implemented by the companion module **[`@wdk-starter/wdk-protocol-eip3009`](https://github.com/plinkdev1/wdk-protocol-eip3009)** — see [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md#gasless).
 
 ## Screenshots
 
@@ -105,7 +105,7 @@ Pass a `theme` to `mountCheckout` — any subset of keys overrides the WDK defau
 it re-skins the entire widget:
 
 ```ts
-import { mountCheckout } from 'wdk-checkout';
+import { mountCheckout } from '@wdk-starter/wdk-checkout';
 
 mountCheckout(root, {
   ...config,
@@ -131,7 +131,7 @@ confirmations, window) live in the same admin screen.
 This repo also ships the **server side of [x402](#)** — monetize automated
 traffic per request:
 
-- **`wdk-checkout/x402`** — a full facilitator: `buildPaymentRequirements` /
+- **`@wdk-starter/wdk-checkout/x402`** — a full facilitator: `buildPaymentRequirements` /
   `buildPaymentRequiredResponse` (the 402 challenge), `decodePaymentHeader`,
   `verifyExactPayment` (recovers the EIP-3009 signer off-chain — no keys, no RPC,
   edge-safe), and `settleExactPayment` (submits the authorization on-chain via a

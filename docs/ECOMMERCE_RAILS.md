@@ -1,6 +1,6 @@
 # Ecommerce rails
 
-Beyond a plain self-custodial USDt transfer, `wdk-checkout` ships four optional
+Beyond a plain self-custodial USDt transfer, `@wdk-starter/wdk-checkout` ships four optional
 **rails** as small, config-driven SDK modules. Each one is a *seam*: you supply
 the price feed / DEX quote / Lightning endpoint, and nothing is hard-coded. They
 are framework-free TypeScript and import on demand, so they don't bloat the
@@ -8,17 +8,17 @@ checkout widget bundle.
 
 | Rail | Import | What it does |
 |---|---|---|
-| Fiat pricing | `wdk-checkout/pricing` | Show the fiat price; convert fiat → token at a rate you supply |
-| Swap-to-settle | `wdk-checkout/swap` | Customer pays any token; merchant receives exactly the order amount in USDt |
-| Subscriptions | `wdk-checkout/subscriptions` | Recurring payments as per-period EIP-3009 authorizations |
-| Lightning | `wdk-checkout/lightning` | BOLT11 invoice + poll to settlement (Spark / LNbits / LND-REST) |
+| Fiat pricing | `@wdk-starter/wdk-checkout/pricing` | Show the fiat price; convert fiat → token at a rate you supply |
+| Swap-to-settle | `@wdk-starter/wdk-checkout/swap` | Customer pays any token; merchant receives exactly the order amount in USDt |
+| Subscriptions | `@wdk-starter/wdk-checkout/subscriptions` | Recurring payments as per-period EIP-3009 authorizations |
+| Lightning | `@wdk-starter/wdk-checkout/lightning` | BOLT11 invoice + poll to settlement (Spark / LNbits / LND-REST) |
 
 All amounts are **base units** (integer strings) — e.g. `10 USDt` is `"10000000"`
 at 6 decimals — and all money math is exact (BigInt/string), never floating point.
 
 ---
 
-## Fiat pricing — `wdk-checkout/pricing`
+## Fiat pricing — `@wdk-starter/wdk-checkout/pricing`
 
 The widget already shows the store-currency price when the payment intent carries
 `displayTotal` + `currency` (the WooCommerce plugin fills these in). The module is
@@ -26,7 +26,7 @@ for the conversion side: turning a fiat-priced order into a settlement amount wh
 the store currency isn't 1:1 with USDt.
 
 ```ts
-import { quoteTokenBase, staticRate, endpointRate } from 'wdk-checkout/pricing'
+import { quoteTokenBase, staticRate, endpointRate } from '@wdk-starter/wdk-checkout/pricing'
 
 // 1:1 store (USD priced, USDt settled) — no FX needed:
 const usd = await quoteTokenBase({
@@ -51,7 +51,7 @@ const eur = await quoteTokenBase({
 
 ---
 
-## Swap-to-settle — `wdk-checkout/swap`
+## Swap-to-settle — `@wdk-starter/wdk-checkout/swap`
 
 Accept any token, settle the merchant in USDt. It's an **exact-output** swap: the
 merchant gets exactly the order amount; the customer pays a variable input capped
@@ -59,7 +59,7 @@ by slippage. After the swap the merchant receives a normal USDt `Transfer`, so t
 gateway's existing on-chain verifier confirms it unchanged.
 
 ```ts
-import { quoteAndPlanSwapToSettle, type SwapQuoteProvider } from 'wdk-checkout/swap'
+import { quoteAndPlanSwapToSettle, type SwapQuoteProvider } from '@wdk-starter/wdk-checkout/swap'
 
 // Adapter over your aggregator (Velora / 0x / 1inch). The WDK wallet bundles
 // @tetherto/wdk-protocol-swap-velora-evm to execute the resulting plan.
@@ -83,7 +83,7 @@ const plan = await quoteAndPlanSwapToSettle({
 
 ---
 
-## Subscriptions — `wdk-checkout/subscriptions`
+## Subscriptions — `@wdk-starter/wdk-checkout/subscriptions`
 
 A subscription is a **schedule of EIP-3009 authorizations**, one per billing
 period. Each charge has its own time-boxed `validAfter`..`validBefore` window and a
@@ -94,7 +94,7 @@ Self-custodial: nothing auto-charges without a customer signature.
 import {
   buildSubscriptionSchedule, subscriptionDomain, chargeTypedData,
   verifyChargeSignature, chargeDueAt,
-} from 'wdk-checkout/subscriptions'
+} from '@wdk-starter/wdk-checkout/subscriptions'
 
 // 1) Merchant builds the schedule (deterministic — recomputable from the plan):
 const schedule = buildSubscriptionSchedule({
@@ -118,14 +118,14 @@ const due = chargeDueAt(schedule) // the charge whose window contains "now", or 
 
 ---
 
-## Lightning (Spark) — `wdk-checkout/lightning`
+## Lightning (Spark) — `@wdk-starter/wdk-checkout/lightning`
 
 Mint a BOLT11 invoice for the order and poll until it's paid. Backends are
 pluggable; `createLightningClient` wires a generic REST endpoint (Spark, LNbits,
 LND-REST). No node URL or key is hard-coded.
 
 ```ts
-import { createLightningClient, satsForFiat, pollInvoice } from 'wdk-checkout/lightning'
+import { createLightningClient, satsForFiat, pollInvoice } from '@wdk-starter/wdk-checkout/lightning'
 
 const ln = createLightningClient({
   baseUrl: process.env.LN_BASE_URL!,            // your Spark/LNbits endpoint

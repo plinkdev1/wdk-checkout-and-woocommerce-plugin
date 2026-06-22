@@ -6,7 +6,7 @@ storefront. The customer pays directly from their own wallet to the merchant; th
 SDK never custodies funds.
 
 ```bash
-npm install wdk-checkout
+npm install @wdk-starter/wdk-checkout
 # ethers is an optional peer — only needed for the /x402 and /subscriptions subpaths:
 npm install ethers
 ```
@@ -14,7 +14,7 @@ npm install ethers
 ## Mount the widget
 
 ```ts
-import { mountCheckout } from 'wdk-checkout'
+import { mountCheckout } from '@wdk-starter/wdk-checkout'
 
 const teardown = mountCheckout(document.getElementById('checkout')!, {
   intent: {
@@ -40,12 +40,12 @@ variables). Connect a wallet and pay, or pay manually and confirm by tx hash.
 
 | Import | What it is |
 |---|---|
-| `wdk-checkout` | the checkout widget (`mountCheckout`, `payIntent`, `DEFAULT_CHECKOUT_THEME`, types) |
-| `wdk-checkout/x402` | x402 facilitator — verify/settle per-request EIP-3009 payments (charge bots/agents) |
-| `wdk-checkout/pricing` | fiat display + exact base-unit conversion, pluggable `RateSource` |
-| `wdk-checkout/swap` | swap-to-settle plan math (pay any token, merchant receives USDt) |
-| `wdk-checkout/subscriptions` | recurring payments as per-period EIP-3009 authorizations |
-| `wdk-checkout/lightning` | BOLT11 invoice + poll-to-settlement (`LightningProvider`) |
+| `@wdk-starter/wdk-checkout` | the checkout widget (`mountCheckout`, `payIntent`, `DEFAULT_CHECKOUT_THEME`, types) |
+| `@wdk-starter/wdk-checkout/x402` | x402 facilitator — verify/settle per-request EIP-3009 payments (charge bots/agents) |
+| `@wdk-starter/wdk-checkout/pricing` | fiat display + exact base-unit conversion, pluggable `RateSource` |
+| `@wdk-starter/wdk-checkout/swap` | swap-to-settle plan math (pay any token, merchant receives USDt) |
+| `@wdk-starter/wdk-checkout/subscriptions` | recurring payments as per-period EIP-3009 authorizations |
+| `@wdk-starter/wdk-checkout/lightning` | BOLT11 invoice + poll-to-settlement (`LightningProvider`) |
 
 The ecommerce-rail modules (`pricing`/`swap`/`subscriptions`/`lightning`) are
 config-driven — you supply the rate feed / DEX quote / Lightning endpoint; no keys

@@ -1,5 +1,5 @@
 {
-  "name": "wdk-checkout",
+  "name": "@wdk-starter/wdk-checkout",
   "version": "1.0.0",
   "description": "Headless WDK checkout widget \u2014 self-custodial USDt payments for ecommerce. Powers the WooCommerce 'WDK Pay' gateway and works standalone.",
   "type": "module",

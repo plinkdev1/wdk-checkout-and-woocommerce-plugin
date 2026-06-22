@@ -1,5 +1,5 @@
 {
-  "name": "wdk-payment-verifier",
+  "name": "@wdk-starter/wdk-payment-verifier",
   "version": "1.0.0",
   "description": "Server-side on-chain confirmation for self-custodial WDK Pay payments — verify or watch for a USDt transfer to the merchant with N confirmations. Node/headless counterpart to the WooCommerce PHP verifier.",
   "type": "module",

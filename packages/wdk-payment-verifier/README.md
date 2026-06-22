@@ -8,13 +8,13 @@ merchant only *watches* the chain. It's the Node/headless counterpart to the
 WooCommerce plugin's PHP verifier.
 
 ```bash
-npm install wdk-payment-verifier
+npm install @wdk-starter/wdk-payment-verifier
 ```
 
 ## Verify a known transaction
 
 ```ts
-import { PaymentVerifier } from 'wdk-payment-verifier'
+import { PaymentVerifier } from '@wdk-starter/wdk-payment-verifier'
 
 const verifier = new PaymentVerifier({ rpcUrl: process.env.RPC_URL! })
 
