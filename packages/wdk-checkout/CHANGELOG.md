@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Typed errors + payment state machine** — `CheckoutError` with stable `code`s
+  (`NO_WALLET`, `WALLET_REJECTED`, `WRONG_CHAIN`, `INSUFFICIENT_FUNDS`,
+  `TX_FAILED`, `INVALID_TX_HASH`, `VERIFICATION_FAILED`, `EXPIRED`,
+  `NETWORK_ERROR`, `NOT_CONFIGURED`), `isCheckoutError()`, `toCheckoutError()`,
+  and `PAYMENT_TRANSITIONS`/`canTransition()`. The wallet payment path throws
+  typed errors so headless callers branch on `err.code`.
+- **Optional React adapter** — `@wdk-starter/wdk-checkout/react` exports a
+  `<WdkCheckout>` drop-in component (mounts the framework-free widget) and a
+  headless `useWdkPayment(config)` hook returning `{ status, error, txHash, pay,
+  confirmByHash, reset }`. `react` is an optional peer dependency; the package
+  root never imports React.
+
 ### Changed
 
 - Package is now published under the `@wdk-starter` scope as
