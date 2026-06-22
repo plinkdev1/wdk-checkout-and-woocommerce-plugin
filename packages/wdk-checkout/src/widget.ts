@@ -1,4 +1,4 @@
-import type { CheckoutTheme, PaymentIntent, PaymentStatus, WdkPayConfig } from './types.js'
+import type { CheckoutBrand, CheckoutTheme, PaymentIntent, PaymentStatus, WdkPayConfig } from './types.js'
 import { DEFAULT_CHECKOUT_THEME } from './types.js'
 import { payIntent } from './usdt.js'
 import { qrDataUrl } from './qr.js'
@@ -22,7 +22,7 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
   const theme: CheckoutTheme = { ...DEFAULT_CHECKOUT_THEME, ...config.theme }
 
   root.innerHTML = ''
-  const el = buildDom(intent, theme)
+  const el = buildDom(intent, theme, config.brand)
   root.appendChild(el.container)
 
   function setStatus (next: PaymentStatus, message?: string) {
@@ -113,7 +113,7 @@ interface Dom {
   tabs: { wallet: HTMLButtonElement, manual: HTMLButtonElement }
 }
 
-function buildDom (intent: PaymentIntent, theme: CheckoutTheme): Dom {
+function buildDom (intent: PaymentIntent, theme: CheckoutTheme, brand?: CheckoutBrand): Dom {
   const container = div({ maxWidth: '420px', margin: '0 auto', fontFamily: 'var(--wp-font)', color: 'var(--wp-text)' })
   // Inject the palette as CSS variables; they cascade to every child element
   // (including the helper-built buttons/inputs), so a merchant can re-skin the
@@ -123,8 +123,28 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme): Dom {
     '--wp-text-muted': theme.textMuted, '--wp-text-faint': theme.textFaint, '--wp-accent': theme.accent,
     '--wp-accent-text': theme.accentText, '--wp-border': theme.border, '--wp-info': theme.info,
     '--wp-success': theme.success, '--wp-error': theme.error, '--wp-radius': theme.radius, '--wp-font': theme.fontFamily,
+    '--wp-heading-font': theme.headingFontFamily ?? theme.fontFamily,
   }
   for (const [k, val] of Object.entries(vars)) container.style.setProperty(k, val)
+
+  // White-label brand header (logo + store name) — shown only when config.brand is set.
+  if (brand && (brand.logoUrl || brand.name)) {
+    const header = div({ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '14px' })
+    if (brand.logoUrl) {
+      const logo = document.createElement('img')
+      logo.src = brand.logoUrl
+      logo.alt = brand.logoAlt ?? brand.name ?? 'logo'
+      Object.assign(logo.style, { height: '28px', width: 'auto', display: 'block' })
+      header.appendChild(logo)
+    }
+    if (brand.name) {
+      const name = document.createElement('span')
+      name.textContent = brand.name
+      Object.assign(name.style, { fontFamily: 'var(--wp-heading-font)', fontSize: '17px', fontWeight: '700', color: 'var(--wp-text)' })
+      header.appendChild(name)
+    }
+    container.appendChild(header)
+  }
 
   const amountCard = div({ background: 'var(--wp-surface)', color: 'var(--wp-on-surface)', borderRadius: 'var(--wp-radius)', padding: '20px', textAlign: 'center', marginBottom: '16px' })
   // Familiar fiat price (e.g. "$19.99"), shown above the on-chain amount when
@@ -135,7 +155,7 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme): Dom {
     ${fiat ? `<div style="font-size:15px;opacity:.85;margin-top:2px">${esc(fiat)}</div>` : ''}`
   // Amount line with the payment token's REAL @web3icons logo (chip fallback for
   // unknown tokens). textContent keeps it XSS-safe without manual escaping.
-  const amountRow = div({ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '30px', fontWeight: '700', letterSpacing: '-.5px', marginTop: '2px' })
+  const amountRow = div({ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '30px', fontWeight: '700', letterSpacing: '-.5px', marginTop: '2px', fontFamily: 'var(--wp-heading-font)' })
   amountRow.appendChild(createTokenIcon(intent.tokenSymbol, 28))
   const amountText = document.createElement('span')
   amountText.textContent = `${intent.amount} ${intent.tokenSymbol}`

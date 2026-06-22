@@ -18,8 +18,8 @@ export {
   PAYMENT_TRANSITIONS, canTransition,
 } from './errors.js'
 export type { CheckoutErrorCode } from './errors.js'
-export type { PaymentIntent, WdkPayConfig, EthereumProvider, PaymentStatus, CheckoutTheme } from './types.js'
-export { DEFAULT_CHECKOUT_THEME } from './types.js'
+export type { PaymentIntent, WdkPayConfig, EthereumProvider, PaymentStatus, CheckoutTheme, CheckoutBrand } from './types.js'
+export { DEFAULT_CHECKOUT_THEME, DARK_CHECKOUT_THEME, CHECKOUT_THEMES } from './types.js'
 export {
   formatFiat, formatTokenAmount, fiatToTokenBase,
   staticRate, endpointRate, quoteTokenBase, fiatDisplayLine

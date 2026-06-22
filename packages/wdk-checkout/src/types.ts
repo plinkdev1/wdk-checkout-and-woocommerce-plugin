@@ -72,8 +72,20 @@ export interface CheckoutTheme {
   error: string
   /** Card corner radius (e.g. "14px"). */
   radius: string
-  /** Font-family stack. */
+  /** Font-family stack (body text). */
   fontFamily: string
+  /** Optional heading/display font stack (brand name + amount). Falls back to fontFamily. */
+  headingFontFamily?: string
+}
+
+/** Optional merchant brand shown atop the widget (logo + store name) — white-label. */
+export interface CheckoutBrand {
+  /** Store / brand name shown next to the logo. */
+  readonly name?: string
+  /** Logo image URL (rendered ~28px tall). */
+  readonly logoUrl?: string
+  /** Accessible alt text for the logo (defaults to `name`). */
+  readonly logoAlt?: string
 }
 
 /** WDK default palette (warm dark surface + WDK orange accent). */
@@ -93,6 +105,35 @@ export const DEFAULT_CHECKOUT_THEME: CheckoutTheme = {
   fontFamily: 'ui-sans-serif, system-ui, sans-serif',
 }
 
+/** Dark-storefront palette — light text on dark surfaces, same WDK orange accent. */
+export const DARK_CHECKOUT_THEME: CheckoutTheme = {
+  surface: '#0f0b08',
+  onSurface: '#f7eee8',
+  text: '#f7eee8',
+  textMuted: '#b9a89e',
+  textFaint: '#8a7c72',
+  accent: '#f4642f',
+  accentText: '#1a0f08',
+  border: '#2a221c',
+  info: '#3b82f6',
+  success: '#22c55e',
+  error: '#ef4444',
+  radius: '14px',
+  fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+}
+
+/**
+ * Built-in theme presets. Pick a base for your storefront, then override
+ * individual tokens via `WdkPayConfig.theme`. The WDK default stays the
+ * standard; everything else is opt-in customization.
+ */
+export const CHECKOUT_THEMES = {
+  /** WDK default — orange accent, dark amount card, for a LIGHT storefront. */
+  wdk: DEFAULT_CHECKOUT_THEME,
+  /** For DARK storefronts — light text on dark surfaces. */
+  dark: DARK_CHECKOUT_THEME,
+} as const
+
 export interface WdkPayConfig {
   readonly intent: PaymentIntent
   readonly endpoints: {
@@ -109,6 +150,8 @@ export interface WdkPayConfig {
   readonly explorer?: string
   /** Optional palette override — match the widget to your storefront. */
   readonly theme?: Partial<CheckoutTheme>
+  /** Optional merchant brand (logo + store name) rendered atop the widget. */
+  readonly brand?: CheckoutBrand
 }
 
 /** Minimal EIP-1193 provider shape (e.g. `window.ethereum`). */

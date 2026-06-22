@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **White-label: brand + theme presets** — an optional `brand` block (logo +
+  store name) rendered atop the widget, a `headingFontFamily` typography token,
+  and built-in `CHECKOUT_THEMES` presets (`wdk` default + `dark` for dark
+  storefronts). Pick a preset, set your brand, override any token via `theme` —
+  no component edits; the WDK default stays the standard.
 - **Typed errors + payment state machine** — `CheckoutError` with stable `code`s
   (`NO_WALLET`, `WALLET_REJECTED`, `WRONG_CHAIN`, `INSUFFICIENT_FUNDS`,
   `TX_FAILED`, `INVALID_TX_HASH`, `VERIFICATION_FAILED`, `EXPIRED`,
