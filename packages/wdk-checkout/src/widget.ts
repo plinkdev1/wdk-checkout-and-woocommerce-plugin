@@ -16,6 +16,7 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
   let status: PaymentStatus = intent.status === 'confirmed' ? 'confirmed' : 'idle'
   let pollTimer: ReturnType<typeof setInterval> | undefined
   let countdownTimer: ReturnType<typeof setInterval> | undefined
+  let redirectTimer: ReturnType<typeof setTimeout> | undefined
 
   const theme: CheckoutTheme = { ...DEFAULT_CHECKOUT_THEME, ...config.theme }
 
@@ -34,7 +35,7 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
     setStatus('confirming', 'Verifying your payment on-chain…')
     const ok = await postConfirm(config, txHash, from)
     if (ok === 'confirmed') {
-      finishConfirmed(el, config)
+      redirectTimer = finishConfirmed(el, config)
       setStatus('confirmed')
       stopTimers()
     } else if (ok === 'failed') {
@@ -44,7 +45,7 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
       if (!pollTimer) {
         pollTimer = setInterval(async () => {
           const s = await postConfirm(config, txHash, from)
-          if (s === 'confirmed') { finishConfirmed(el, config); setStatus('confirmed'); stopTimers() } else if (s === 'failed') { setStatus('failed', 'Verification failed.'); stopTimers() }
+          if (s === 'confirmed') { redirectTimer = finishConfirmed(el, config); setStatus('confirmed'); stopTimers() } else if (s === 'failed') { setStatus('failed', 'Verification failed.'); stopTimers() }
         }, 5000)
       }
     }
@@ -74,7 +75,18 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
   // Countdown
   function tickCountdown () {
     const remaining = intent.expiresAt * 1000 - Date.now()
-    el.countdown.textContent = remaining > 0 ? `Payment window: ${formatRemaining(remaining)}` : 'Payment window expired — refresh to retry.'
+    if (remaining > 0) {
+      el.countdown.textContent = `Payment window: ${formatRemaining(remaining)}`
+      return
+    }
+    el.countdown.textContent = 'Payment window expired — refresh to retry.'
+    // Stop ticking and block paying into a stale intent — but never yank the UI
+    // out from under a payment that's already in flight or confirmed.
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = undefined }
+    if (status === 'idle' || status === 'failed') {
+      el.payBtn.disabled = true
+      el.confirmBtn.disabled = true
+    }
   }
   tickCountdown()
   countdownTimer = setInterval(tickCountdown, 1000)
@@ -84,9 +96,9 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = undefined }
   }
 
-  if (status === 'confirmed') { finishConfirmed(el, config); setStatus('confirmed') }
+  if (status === 'confirmed') { redirectTimer = finishConfirmed(el, config); setStatus('confirmed') }
 
-  return () => { stopTimers(); root.innerHTML = '' }
+  return () => { stopTimers(); if (redirectTimer) clearTimeout(redirectTimer); root.innerHTML = '' }
 }
 
 interface Dom {
@@ -202,9 +214,9 @@ function renderStatus (el: Dom, status: PaymentStatus, message: string | undefin
   void config
 }
 
-function finishConfirmed (el: Dom, config: WdkPayConfig) {
+function finishConfirmed (el: Dom, config: WdkPayConfig): ReturnType<typeof setTimeout> {
   el.statusBox.innerHTML = '<span style="color:var(--wp-success);font-weight:600">Payment confirmed ✓ — redirecting…</span>'
-  setTimeout(() => { window.location.href = config.returnUrl }, 1500)
+  return setTimeout(() => { window.location.href = config.returnUrl }, 1500)
 }
 
 async function postConfirm (config: WdkPayConfig, txHash: string, from?: string): Promise<'confirmed' | 'pending' | 'failed'> {
