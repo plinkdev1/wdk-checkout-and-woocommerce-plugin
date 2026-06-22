@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-06-22
+
 ### Added
 
 - **White-label: brand + theme presets** — an optional `brand` block (logo +
@@ -124,5 +126,6 @@ widget bundle). All money math is exact (BigInt / string base units).
 - Manual confirmation validates the transaction-hash format (`0x` + 64 hex)
   before posting.
 
-[Unreleased]: https://github.com/plinkdev1/wdk-checkout-and-woocommerce-plugin/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/plinkdev1/wdk-checkout-and-woocommerce-plugin/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/plinkdev1/wdk-checkout-and-woocommerce-plugin/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/plinkdev1/wdk-checkout-and-woocommerce-plugin/releases/tag/v1.0.0
