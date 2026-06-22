@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { tokenIconUrl, tokenChipDataUri, configureTokenIcons } from './token-icon.js'
 
-const DEFAULT_BASE = 'https://cdn.jsdelivr.net/gh/0xa3k5/web3icons@main/packages/core/src/svgs/tokens/branded'
+const DEFAULT_BASE = 'https://cdn.jsdelivr.net/gh/0xa3k5/web3icons@@web3icons%2Fcore@4.0.51/packages/core/src/svgs/tokens/branded'
 
 afterEach(() => { configureTokenIcons({ baseUrl: DEFAULT_BASE }) })
 

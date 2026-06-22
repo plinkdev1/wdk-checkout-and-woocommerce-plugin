@@ -13,8 +13,12 @@
  * or self-host a mirror.
  */
 
-// @web3icons "branded" SVGs are keyed by UPPERCASE ticker.
-let brandedBaseUrl = 'https://cdn.jsdelivr.net/gh/0xa3k5/web3icons@main/packages/core/src/svgs/tokens/branded'
+// @web3icons "branded" SVGs are keyed by UPPERCASE ticker. Pinned to an
+// immutable release tag (not @main) so an upstream restructure can't move the
+// path out from under production; override via configureTokenIcons() to take a
+// newer version or self-host. (Even if a URL ever 404s, the chip fallback
+// renders — nothing breaks.)
+let brandedBaseUrl = 'https://cdn.jsdelivr.net/gh/0xa3k5/web3icons@@web3icons%2Fcore@4.0.51/packages/core/src/svgs/tokens/branded'
 
 /** Override the @web3icons icon base URL (e.g. to pin a version or self-host). */
 export function configureTokenIcons (opts: { baseUrl: string }): void {
