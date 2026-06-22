@@ -63,7 +63,11 @@ For customers with no native gas token, the checkout can use **EIP-3009 `transfe
 |:--:|:--:|:--:|
 | ![Checkout overview](./media/screenshots/01-checkout-overview.png) | ![Pay with wallet](./media/screenshots/02-pay-with-wallet.png) | ![Pay manually](./media/screenshots/03-pay-manually-qr.png) |
 
-**▶ Demo video:** [`media/demo/wdk-pay-checkout-demo.webm`](./media/demo/wdk-pay-checkout-demo.webm) (use **Download**/**Raw** on GitHub). The shot-by-shot script is in [`docs/DEMO.md`](./docs/DEMO.md).
+**▶ Demo video** — a real screen recording of the running widget (storefront → amount card with the live token icon → wallet tab → manual QR + address + tx-hash):
+
+<video src="https://github.com/plinkdev1/wdk-checkout-and-woocommerce-plugin/raw/main/media/demo/wdk-pay-checkout-demo.webm" controls muted></video>
+
+> Player not loading (e.g. before the repo is public)? **Download the raw `.webm`:** [`media/demo/wdk-pay-checkout-demo.webm`](./media/demo/wdk-pay-checkout-demo.webm) (or click **Raw** on the file page). Walkthrough script: [`docs/DEMO.md`](./docs/DEMO.md).
 
 > Try it yourself with **zero setup**: open [`examples/checkout-demo.html`](./examples/checkout-demo.html) in a browser — it runs the real widget against a sample payment intent. Screenshots above are captured from that page via headless Chromium.
 
