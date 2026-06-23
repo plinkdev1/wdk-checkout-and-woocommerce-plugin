@@ -1,6 +1,9 @@
 <div align="center">
 
-<img src="./brand/wdk-checkout-mark-256.png" alt="WDK Checkout" width="120" onerror="this.style.display='none'" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./brand/wdk-pay-lockup-ondark.png" />
+  <img src="./brand/wdk-pay-lockup-onlight.png" alt="WDK Pay" width="380" />
+</picture>
 
 # WDK Pay — Self-Custodial USDt Checkout for WooCommerce
 

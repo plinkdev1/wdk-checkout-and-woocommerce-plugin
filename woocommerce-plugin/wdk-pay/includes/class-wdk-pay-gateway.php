@@ -37,6 +37,9 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 		$this->has_fields         = false;
 		$this->supports           = array( 'products' );
 
+		// Gateway icon shown next to the method at checkout: the WDK badge.
+		$this->icon = apply_filters( 'wdk_pay_gateway_icon', WDK_PAY_PLUGIN_URL . 'assets/img/wdk-pay-icon.png' );
+
 		// Build the settings UI and load saved values.
 		$this->init_form_fields();
 		$this->init_settings();
@@ -53,6 +56,22 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 
 		// Render the widget on the order-pay (receipt) page for this gateway.
 		add_action( 'woocommerce_receipt_' . $this->id, array( $this, 'receipt_page' ) );
+	}
+
+	/**
+	 * Render the gateway icon at a tidy, constrained size next to the method
+	 * title. Without this override WooCommerce would emit the raw (128px) image.
+	 */
+	public function get_icon() {
+		if ( empty( $this->icon ) ) {
+			return apply_filters( 'woocommerce_gateway_icon', '', $this->id );
+		}
+		$icon_html = sprintf(
+			'<img src="%s" alt="%s" style="max-height:24px;width:auto;margin-left:6px;vertical-align:middle" />',
+			esc_url( $this->icon ),
+			esc_attr( $this->get_title() )
+		);
+		return apply_filters( 'woocommerce_gateway_icon', $icon_html, $this->id );
 	}
 
 	/**
