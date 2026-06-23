@@ -58,9 +58,10 @@
   "engines": {
     "node": ">=20"
   },
-  "overrides": {
-    "vitest": "^3.2.6",
-    "vite": ">=6.4.3 <7",
-    "ws": ">=8.21.0"
+  "pnpm": {
+    "overrides": {
+      "ws": ">=8.21.0",
+      "esbuild": ">=0.28.1"
+    }
   }
 }
