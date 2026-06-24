@@ -11,7 +11,7 @@ checkout widget bundle.
 | Fiat pricing | `@wdk-starter/wdk-checkout/pricing` | Show the fiat price; convert fiat → token at a rate you supply |
 | Swap-to-settle | `@wdk-starter/wdk-checkout/swap` | Customer pays any token; merchant receives exactly the order amount in USDt |
 | Subscriptions | `@wdk-starter/wdk-checkout/subscriptions` | Recurring payments as per-period EIP-3009 authorizations |
-| Lightning | `@wdk-starter/wdk-checkout/lightning` | BOLT11 invoice + poll to settlement (Spark / LNbits / LND-REST) |
+| Lightning | `@wdk-starter/wdk-checkout/lightning` | BOLT11 invoice + poll to settlement — generic REST (Spark / LNbits / LND-REST) **or** straight into your own Spark wallet (`createSparkLightningProvider`) |
 
 All amounts are **base units** (integer strings) — e.g. `10 USDt` is `"10000000"`
 at 6 decimals — and all money math is exact (BigInt/string), never floating point.
@@ -142,6 +142,30 @@ if (result.status === 'paid') completeOrder(orderId)
 ```
 
 The customer pays from any Lightning wallet, including a WDK Spark wallet.
+
+### Accept straight into your own Spark wallet (self-custodial, no LN service)
+
+`createSparkLightningProvider` adapts a WDK Spark account to the same
+`LightningProvider` interface — the merchant receives Lightning payments directly
+into their own Spark wallet, with no third-party node. The account is typed
+through a narrow local interface, so this package imports **no** Spark SDK; you
+construct the account and hand it in.
+
+```ts
+import { createSparkLightningProvider, satsForFiat, pollInvoice } from '@wdk-starter/wdk-checkout/lightning'
+import WalletManagerSpark from '@tetherto/wdk-wallet-spark'
+
+const account = await new WalletManagerSpark(process.env.MERCHANT_SEED!).getAccount(0)
+const ln = createSparkLightningProvider(account) // satisfies LightningProvider
+
+const invoice = await ln.createInvoice({ amountSats: satsForFiat({ fiatAmount: 19.99, btcPriceFiat: 65_000 }), memo: `Order #${orderId}` })
+const result = await pollInvoice({ provider: ln, id: invoice.id })
+if (result.status === 'paid') completeOrder(orderId)
+```
+
+Status mapping tolerates the SDK's `LightningReceiveRequest` status strings (a
+recovered preimage / completed transfer = paid); override with `{ mapStatus }` if
+your build differs.
 
 ---
 

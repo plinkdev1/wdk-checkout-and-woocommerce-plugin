@@ -7,7 +7,8 @@ import { describe, it, expect, vi } from 'vitest'
 import {
   btcToSats, satsForFiat, formatSats, normalizeLightningStatus,
   createLightningClient, pollInvoice,
-  type LightningProvider, type LightningInvoiceStatus
+  createSparkLightningProvider, normalizeSparkReceiveStatus,
+  type LightningProvider, type LightningInvoiceStatus, type SparkLightningAccount
 } from './lightning.js'
 
 describe('conversions', () => {
@@ -76,6 +77,65 @@ describe('createLightningClient', () => {
       fetchImpl: (async () => ({ ok: false, status: 500 })) as unknown as typeof fetch
     })
     await expect(client.createInvoice({ amountSats: 1 })).rejects.toThrow(/500/)
+  })
+})
+
+describe('normalizeSparkReceiveStatus', () => {
+  it('treats a preimage / transfer / received-style status as paid', () => {
+    expect(normalizeSparkReceiveStatus({ status: 'LIGHTNING_PAYMENT_RECEIVED' })).toBe('paid')
+    expect(normalizeSparkReceiveStatus({ status: 'TRANSFER_COMPLETED' })).toBe('paid')
+    expect(normalizeSparkReceiveStatus({ paymentPreimage: 'deadbeef' })).toBe('paid')
+    expect(normalizeSparkReceiveStatus({ transfer: { id: 't1' } })).toBe('paid')
+  })
+  it('maps expired/cancelled and defaults to pending', () => {
+    expect(normalizeSparkReceiveStatus({ status: 'INVOICE_EXPIRED' })).toBe('expired')
+    expect(normalizeSparkReceiveStatus({ status: 'CANCELLED' })).toBe('expired')
+    expect(normalizeSparkReceiveStatus({ status: 'INVOICE_CREATED' })).toBe('pending')
+    expect(normalizeSparkReceiveStatus({})).toBe('pending')
+  })
+})
+
+describe('createSparkLightningProvider', () => {
+  it('adapts a Spark account: createInvoice extracts id + BOLT11, getInvoiceStatus maps status', async () => {
+    const account: SparkLightningAccount = {
+      createLightningInvoice: vi.fn(async ({ amountSats, memo }) => ({
+        id: 'req_1',
+        invoice: { encodedInvoice: 'lnbc500n1pexample' },
+        amountSats,
+        memo
+      })),
+      getLightningReceiveRequest: vi.fn(async (id: string) => ({ id, status: 'LIGHTNING_PAYMENT_RECEIVED', paymentPreimage: 'beef' }))
+    }
+    const ln = createSparkLightningProvider(account)
+
+    const inv = await ln.createInvoice({ amountSats: 500, memo: 'order #7' })
+    expect(inv.id).toBe('req_1')
+    expect(inv.bolt11).toBe('lnbc500n1pexample')
+    expect(inv.amountSats).toBe(500)
+    expect(inv.expiresAt).toBeGreaterThan(inv.createdAt)
+    expect(account.createLightningInvoice).toHaveBeenCalledWith(expect.objectContaining({ amountSats: 500, memo: 'order #7' }))
+
+    const st = await ln.getInvoiceStatus('req_1')
+    expect(st.status).toBe('paid')
+    expect(st.preimage).toBe('beef')
+  })
+
+  it('throws when the receive request has no BOLT11', async () => {
+    const account: SparkLightningAccount = {
+      createLightningInvoice: vi.fn(async () => ({ id: 'req_2' })), // no encodedInvoice
+      getLightningReceiveRequest: vi.fn(async (id: string) => ({ id, status: 'INVOICE_CREATED' }))
+    }
+    const ln = createSparkLightningProvider(account)
+    await expect(ln.createInvoice({ amountSats: 100 })).rejects.toThrow(/encodedInvoice|BOLT11/)
+  })
+
+  it('honors a custom mapStatus override', async () => {
+    const account: SparkLightningAccount = {
+      createLightningInvoice: vi.fn(async () => ({ id: 'r', invoice: { encodedInvoice: 'lnbc1' } })),
+      getLightningReceiveRequest: vi.fn(async (id: string) => ({ id, status: 'WHATEVER' }))
+    }
+    const ln = createSparkLightningProvider(account, { mapStatus: () => 'paid' })
+    expect((await ln.getInvoiceStatus('r')).status).toBe('paid')
   })
 })
 

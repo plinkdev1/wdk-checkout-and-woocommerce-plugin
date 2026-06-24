@@ -31,6 +31,15 @@ import {
 //   // createPath / statusPath / parseInvoice / parseStatus are overridable per backend.
 // })
 //
+// --- OR: accept Lightning straight into your own WDK Spark wallet ------------
+// Self-custodial, no third-party Lightning service. Construct a Spark account
+// (server-side) and adapt it — this package imports no SDK; you hand the account in:
+//
+// import { createSparkLightningProvider } from '@wdk-starter/wdk-checkout/lightning'
+// import WalletManagerSpark from '@tetherto/wdk-wallet-spark'
+// const account = await (new WalletManagerSpark(process.env.MERCHANT_SEED!)).getAccount(0)
+// const ln = createSparkLightningProvider(account) // satisfies LightningProvider
+//
 // (referenced so the import is used even with the in-memory demo below)
 void createLightningClient
 

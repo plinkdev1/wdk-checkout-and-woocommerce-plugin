@@ -164,6 +164,101 @@ export function createLightningClient (opts: LightningClientOptions): LightningP
   }
 }
 
+// ─────────────────────────── Spark-backed provider ──────────────────────────
+
+/**
+ * Narrow view of a WDK Spark account's Lightning-receive surface. Typed locally
+ * (not imported from `@tetherto/wdk-wallet-spark`) so this package pulls in no
+ * SDK — the merchant constructs the account and hands it in. Mirrors the
+ * F-WDK-04 narrow-interface boundary the wallet engine uses for Spark.
+ */
+export interface SparkLightningAccount {
+  createLightningInvoice (opts: { amountSats: number, memo?: string, expirySeconds?: number }): Promise<unknown>
+  getLightningReceiveRequest (invoiceId: string): Promise<unknown>
+}
+
+export interface SparkLightningProviderOptions {
+  /** Override status mapping if your SDK build reports different status strings. */
+  readonly mapStatus?: (request: unknown) => LightningStatus
+}
+
+/** Reads the BOLT11 (`encodedInvoice`) out of a Spark `LightningReceiveRequest`. */
+function sparkBolt11 (r: unknown): string {
+  const o = (r ?? {}) as { invoice?: { encodedInvoice?: unknown }, encodedInvoice?: unknown }
+  const enc = o.invoice?.encodedInvoice ?? o.encodedInvoice
+  if (typeof enc !== 'string' || enc.length === 0) {
+    throw new Error('spark: Lightning receive request carried no encodedInvoice (BOLT11)')
+  }
+  return enc
+}
+
+/** Reads the request id out of a Spark `LightningReceiveRequest`. */
+function sparkReceiveId (r: unknown): string {
+  const o = (r ?? {}) as { id?: unknown }
+  if (typeof o.id !== 'string' || o.id.length === 0) {
+    throw new Error('spark: Lightning receive request carried no id')
+  }
+  return o.id
+}
+
+/**
+ * Default status mapping for a Spark `LightningReceiveRequest`. Tolerant of the
+ * SDK's status-string variations: a recovered preimage or a completed transfer
+ * (or a received/settled/success status) means paid; expired/cancelled means
+ * expired; everything else is still pending. Override via `opts.mapStatus`.
+ */
+export function normalizeSparkReceiveStatus (request: unknown): LightningStatus {
+  const o = (request ?? {}) as Record<string, unknown>
+  const raw = String(o.status ?? '').toLowerCase()
+  if (raw.includes('expired') || raw.includes('cancel')) return 'expired'
+  if (o.paymentPreimage != null || o.transfer != null || /received|complete|settled|success|paid|preimage/.test(raw)) {
+    return 'paid'
+  }
+  return 'pending'
+}
+
+/**
+ * A {@link LightningProvider} backed by a WDK Spark account: the merchant accepts
+ * Lightning payments straight into their own Spark wallet — self-custodial, no
+ * third-party Lightning service. Pass an account from `@tetherto/wdk-wallet-spark`
+ * (it satisfies {@link SparkLightningAccount}); this package imports no SDK.
+ */
+export function createSparkLightningProvider (
+  account: SparkLightningAccount,
+  opts: SparkLightningProviderOptions = {}
+): LightningProvider {
+  const mapStatus = opts.mapStatus ?? normalizeSparkReceiveStatus
+  return {
+    async createInvoice (args) {
+      const r = await account.createLightningInvoice({
+        amountSats: args.amountSats,
+        ...(args.memo !== undefined ? { memo: args.memo } : {}),
+        ...(args.expirySeconds !== undefined ? { expirySeconds: args.expirySeconds } : {})
+      })
+      const now = Math.floor(Date.now() / 1000)
+      const expirySeconds = args.expirySeconds ?? 3600
+      return {
+        id: sparkReceiveId(r),
+        bolt11: sparkBolt11(r),
+        amountSats: args.amountSats,
+        ...(args.memo !== undefined ? { memo: args.memo } : {}),
+        createdAt: now,
+        expiresAt: now + expirySeconds
+      }
+    },
+    async getInvoiceStatus (id) {
+      const r = await account.getLightningReceiveRequest(id)
+      const o = (r ?? {}) as Record<string, unknown>
+      const preimage = o.paymentPreimage ?? o.preimage
+      return {
+        id,
+        status: mapStatus(r),
+        ...(typeof preimage === 'string' ? { preimage } : {})
+      }
+    }
+  }
+}
+
 /**
  * Poll an invoice until it is paid or expired (or a timeout elapses). `sleep`
  * and `now` are injectable so this is deterministic in tests. Resolves with the

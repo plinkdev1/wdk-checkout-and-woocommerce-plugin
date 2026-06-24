@@ -45,7 +45,7 @@ variables). Connect a wallet and pay, or pay manually and confirm by tx hash.
 | `@wdk-starter/wdk-checkout/pricing` | fiat display + exact base-unit conversion, pluggable `RateSource` |
 | `@wdk-starter/wdk-checkout/swap` | swap-to-settle plan math (pay any token, merchant receives USDt) |
 | `@wdk-starter/wdk-checkout/subscriptions` | recurring payments as per-period EIP-3009 authorizations |
-| `@wdk-starter/wdk-checkout/lightning` | BOLT11 invoice + poll-to-settlement (`LightningProvider`) |
+| `@wdk-starter/wdk-checkout/lightning` | BOLT11 invoice + poll-to-settlement (`LightningProvider`) — generic REST, or `createSparkLightningProvider` to receive into your own WDK Spark wallet |
 | `@wdk-starter/wdk-checkout/react` | optional React/RN adapter — `<WdkCheckout>` drop-in + `useWdkPayment` headless hook (typed `CheckoutError`s + state machine). `react` is an optional peer. |
 
 The ecommerce-rail modules (`pricing`/`swap`/`subscriptions`/`lightning`) are
