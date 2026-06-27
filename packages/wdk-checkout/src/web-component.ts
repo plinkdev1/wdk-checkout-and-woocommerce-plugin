@@ -14,7 +14,15 @@ import type { WdkPayConfig } from './types.js'
  * the one-tag auto-mount (`data-config` JSON / `data-config-var` / window.WDK_PAY).
  * The mount is torn down on disconnect.
  */
-export class WdkPayElement extends HTMLElement {
+
+// Resolve the base class lazily so this module is safe to *import* in a non-DOM
+// environment (Node, SSR, unit tests). `HTMLElement` only exists in the browser;
+// the empty fallback is never constructed there because {@link defineWdkPayElement}
+// no-ops when Custom Elements are unavailable.
+const ElementBase: typeof HTMLElement =
+  typeof HTMLElement !== 'undefined' ? HTMLElement : (class {} as unknown as typeof HTMLElement)
+
+export class WdkPayElement extends ElementBase {
   /** Optional config set imperatively (takes precedence over data-* attributes). */
   config?: WdkPayConfig
 

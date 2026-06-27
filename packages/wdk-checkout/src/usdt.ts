@@ -44,18 +44,45 @@ export async function ensureChain (chainId: number, provider?: EthereumProvider)
   }
 }
 
+/** The result of a wallet payment: the broadcast hash + the chain it settled on. */
+export interface PayResult {
+  readonly hash: string
+  /** The chain the transfer was sent on (the primary, or an accepted alternative). */
+  readonly chainId: number
+}
+
+/**
+ * Resolves which chain + token to pay with. Multi-chain (item #2): if the wallet
+ * is already on the primary chain or any `acceptedChains` entry, pay there with
+ * that chain's token (no forced switch). Otherwise switch to the primary chain.
+ * `currentChainId` is the wallet's current `eth_chainId` (decimal).
+ */
+export function resolvePayChain (
+  intent: PaymentIntent,
+  currentChainId: number,
+): { chainId: number, tokenAddress: string, switchRequired: boolean } {
+  const accepted: Record<number, string> = { [intent.chainId]: intent.tokenAddress, ...(intent.acceptedChains ?? {}) }
+  const token = accepted[currentChainId]
+  if (token) return { chainId: currentChainId, tokenAddress: token, switchRequired: false }
+  return { chainId: intent.chainId, tokenAddress: intent.tokenAddress, switchRequired: true }
+}
+
 /**
  * Sends the USDt transfer for a payment intent from the connected wallet and
- * returns the broadcast transaction hash. The customer pays gas (direct,
- * non-custodial transfer). For a gasless variant see the EIP-3009 path in the
- * project README (@wdk-starter/wdk-protocol-eip3009).
+ * returns the broadcast transaction hash + the chain it settled on. The customer
+ * pays gas (direct, non-custodial transfer). For a gasless variant see the
+ * EIP-3009 path in the project README (@wdk-starter/wdk-protocol-eip3009).
+ *
+ * Multi-chain: when the wallet is already on the primary or an accepted chain,
+ * the payment happens there (no switch) using that chain's token; the returned
+ * `chainId` tells the caller which chain to verify on.
  *
  * Resolves the wallet once via EIP-6963 (preferring the WDK wallet extension)
  * and reuses it for connect + chain-switch + send. Throws a {@link CheckoutError}
  * with a stable `code` (NO_WALLET / NOT_CONFIGURED / WALLET_REJECTED /
  * WRONG_CHAIN / INSUFFICIENT_FUNDS / TX_FAILED) so headless callers can branch.
  */
-export async function payIntent (intent: PaymentIntent): Promise<string> {
+export async function payIntent (intent: PaymentIntent): Promise<PayResult> {
   const provider = await resolveWalletProvider()
   if (!provider) throw new CheckoutError('NO_WALLET', 'No EVM wallet found. Install the WDK wallet extension or a compatible wallet.')
 
@@ -66,18 +93,25 @@ export async function payIntent (intent: PaymentIntent): Promise<string> {
     throw new CheckoutError('NOT_CONFIGURED', 'ethers is required for wallet payments — install the optional `ethers` peer dependency.', { cause: err })
   }
 
-  // connectWallet / ensureChain reuse the resolved provider and throw typed errors.
   await connectWallet(provider)
-  await ensureChain(intent.chainId, provider)
+
+  // Pick the chain: stay on the wallet's chain if the merchant accepts it, else switch.
+  let current = intent.chainId
+  try {
+    const hex = (await provider.request({ method: 'eth_chainId' })) as string
+    if (hex) current = parseInt(hex, 16)
+  } catch { /* fall back to the primary chain */ }
+  const target = resolvePayChain(intent, current)
+  if (target.switchRequired) await ensureChain(target.chainId, provider)
 
   try {
     const browserProvider = new ethers.BrowserProvider(provider as never)
     const signer = await browserProvider.getSigner()
-    const token = new ethers.Contract(intent.tokenAddress, ERC20_ABI, signer)
+    const token = new ethers.Contract(target.tokenAddress, ERC20_ABI, signer)
 
     const value = BigInt(intent.amountBase)
     const tx = await token.transfer!(intent.receivingAddress, value)
-    return tx.hash as string
+    return { hash: tx.hash as string, chainId: target.chainId }
   } catch (err) {
     throw toCheckoutError(err, 'TX_FAILED')
   }

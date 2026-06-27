@@ -28,8 +28,19 @@
    per-chain asset map (token + decimals); the intent and on-chain verifier resolve
    the chosen asset, falling back to USDt on chains where it isn't deployed. The
    checkout widget is already asset-agnostic. Next: USDC + per-product currency.
-2. **Multi-chain auto-detect** — let the shopper pay on any supported EVM chain;
-   the gateway verifies on whichever chain the tx landed.
+2. ✅ **Multi-chain auto-detect** — the shopper pays on whichever supported EVM
+   chain their wallet is already on; the gateway verifies on **that** chain. The
+   merchant lists extra chains as an **Additional chains** JSON map (`chainId →
+   { rpcUrl, tokenAddress }`) in the gateway settings; the intent advertises them
+   to the widget as `acceptedChains`. The widget's pure `resolvePayChain` stays on
+   the wallet's current chain when it's accepted (no forced network switch),
+   sending that chain's token and returning the `chainId` it settled on. The
+   confirm POST carries that `chainId`, and the REST handler resolves the
+   (rpcUrl, token, decimals) **strictly** from the configured set — the reported
+   chainId is attacker-controlled, so an unconfigured chain is rejected outright
+   (never verified against a default/unknown RPC). The settling chain is recorded
+   on the order so refunds and webhooks target the right network. Verified by unit
+   tests (`resolvePayChain`) and `php -l`.
 3. ✅ **Lightning (Spark) checkout** (`@tetherto/wdk-wallet-spark`) — done
    end-to-end (rail **and** a live WooCommerce gateway).
    - ✅ **Rail** — the `wdk-checkout/lightning` module: mint a BOLT11 invoice,

@@ -67,9 +67,9 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
     el.confirmBtn.disabled = el.payBtn.disabled
   }
 
-  async function confirmHash (txHash: string, from?: string) {
+  async function confirmHash (txHash: string, from?: string, chainId?: number) {
     setStatus('confirming', strings.verifyingOnChain)
-    const ok = await postConfirm(config, txHash, from)
+    const ok = await postConfirm(config, txHash, from, chainId)
     if (ok === 'confirmed') {
       redirectTimer = finishConfirmed(el, config, strings)
       setStatus('confirmed')
@@ -80,7 +80,7 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
       // pending → keep polling the same hash until confirmed/failed
       if (!pollTimer) {
         pollTimer = setInterval(async () => {
-          const s = await postConfirm(config, txHash, from)
+          const s = await postConfirm(config, txHash, from, chainId)
           if (s === 'confirmed') { redirectTimer = finishConfirmed(el, config, strings); setStatus('confirmed'); stopTimers() } else if (s === 'failed') { setStatus('failed', strings.verificationFailed); stopTimers() }
         }, 5000)
       }
@@ -91,9 +91,9 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
     try {
       setStatus('connecting', strings.connectingWallet)
       setStatus('awaiting-signature', strings.confirmInWalletLong)
-      const txHash = await payIntent(intent)
+      const { hash, chainId } = await payIntent(intent)
       setStatus('submitted', strings.submittedWaiting)
-      await confirmHash(txHash)
+      await confirmHash(hash, undefined, chainId)
     } catch (err) {
       setStatus('failed', err instanceof Error ? err.message : strings.paymentFailed)
     }
@@ -332,12 +332,12 @@ function finishConfirmed (el: Dom, config: WdkPayConfig, strings: CheckoutString
   return setTimeout(() => { window.location.href = config.returnUrl }, 1500)
 }
 
-async function postConfirm (config: WdkPayConfig, txHash: string, from?: string): Promise<'confirmed' | 'pending' | 'failed'> {
+async function postConfirm (config: WdkPayConfig, txHash: string, from?: string, chainId?: number): Promise<'confirmed' | 'pending' | 'failed'> {
   try {
     const res = await fetch(config.endpoints.confirm, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': config.nonce },
-      body: JSON.stringify({ orderKey: config.intent.orderKey, txHash, from, chainId: config.intent.chainId })
+      body: JSON.stringify({ orderKey: config.intent.orderKey, txHash, from, chainId: chainId ?? config.intent.chainId })
     })
     const data = (await res.json()) as { status?: string }
     if (data.status === 'confirmed') return 'confirmed'

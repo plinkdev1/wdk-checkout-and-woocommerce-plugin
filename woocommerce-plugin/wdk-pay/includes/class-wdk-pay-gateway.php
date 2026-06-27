@@ -143,6 +143,15 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 				'placeholder' => 'https://...',
 				'desc_tip'    => true,
 			),
+			'additional_chains'  => array(
+				'title'       => __( 'Additional chains (multi-chain)', 'wdk-pay' ),
+				'type'        => 'textarea',
+				/* translators: do not translate the JSON. */
+				'description' => __( 'Optional. Accept payment on more EVM chains: a JSON map of numeric chainId → { "rpcUrl", "tokenAddress" }. The shopper pays on whichever accepted chain their wallet is on; the server verifies on that chain. Example: {"137":{"rpcUrl":"https://polygon-rpc.com","tokenAddress":"0xc2132D…"}}', 'wdk-pay' ),
+				'default'     => '',
+				'css'         => 'height:90px;font-family:monospace;',
+				'desc_tip'    => false,
+			),
 			'confirmations'      => array(
 				'title'             => __( 'Required confirmations', 'wdk-pay' ),
 				'type'              => 'number',
@@ -619,6 +628,7 @@ JS;
 	 *     asset:string,
 	 *     token_address:string,
 	 *     rpc_url:string,
+	 *     additional_chains:array<int,array{rpc_url:string,token_address:string,decimals:int}>,
 	 *     confirmations:int,
 	 *     payment_window:int,
 	 *     gasless:bool,
@@ -650,6 +660,7 @@ JS;
 			'asset'             => $asset_key,
 			'token_address'     => $token_address,
 			'rpc_url'           => trim( (string) $this->get_option( 'rpc_url', '' ) ),
+			'additional_chains' => $this->resolve_additional_chains(),
 			'confirmations'     => max( 1, (int) $this->get_option( 'confirmations', 1 ) ),
 			'payment_window'    => max( 1, (int) $this->get_option( 'payment_window', 30 ) ),
 			'gasless'           => 'yes' === $this->get_option( 'gasless_eip3009', 'no' ),
@@ -737,6 +748,190 @@ JS;
 		}
 
 		return $value;
+	}
+
+	/**
+	 * Validate/sanitize the `additional_chains` JSON on save.
+	 *
+	 * Accepts a JSON object mapping numeric chainId → { rpcUrl, tokenAddress,
+	 * decimals? }. Each entry is validated and re-serialised in a normalised,
+	 * pretty-printed form; invalid entries are dropped with an admin warning that
+	 * names them, so a single typo never strands the whole field. A completely
+	 * unparseable value keeps the previously-saved JSON.
+	 *
+	 * @param string $key   Field key.
+	 * @param string $value Submitted value.
+	 * @return string Normalised JSON, or '' when empty/none valid.
+	 */
+	public function validate_additional_chains_field( $key, $value ) {
+		$value = trim( (string) $value );
+		if ( '' === $value ) {
+			return '';
+		}
+
+		$decoded = json_decode( $value, true );
+		if ( ! is_array( $decoded ) ) {
+			WC_Admin_Settings::add_error(
+				__( 'WDK Pay: “Additional chains” must be valid JSON, e.g. {"137":{"rpcUrl":"https://…","tokenAddress":"0x…"}}.', 'wdk-pay' )
+			);
+			return (string) $this->get_option( $key );
+		}
+
+		$clean   = array();
+		$skipped = array();
+		foreach ( $decoded as $cid => $entry ) {
+			$chain_id = (int) $cid;
+			$rpc      = ( is_array( $entry ) && isset( $entry['rpcUrl'] ) ) ? esc_url_raw( trim( (string) $entry['rpcUrl'] ) ) : '';
+			$token    = ( is_array( $entry ) && isset( $entry['tokenAddress'] ) ) ? WDK_Pay_Verifier::normalize_address( (string) $entry['tokenAddress'] ) : '';
+			$decimals = ( is_array( $entry ) && isset( $entry['decimals'] ) ) ? (int) $entry['decimals'] : WDK_Pay_Intent::DECIMALS;
+
+			if ( $chain_id <= 0 || '' === $rpc || ! wp_http_validate_url( $rpc ) || '' === $token ) {
+				$skipped[] = (string) $cid;
+				continue;
+			}
+			if ( $decimals < 0 || $decimals > 36 ) {
+				$decimals = WDK_Pay_Intent::DECIMALS;
+			}
+
+			// String key keeps a stable JSON object on round-trip; PHP still
+			// stores it under the integer key, which is what we want.
+			$clean[ (string) $chain_id ] = array(
+				'rpcUrl'       => $rpc,
+				'tokenAddress' => $token,
+				'decimals'     => $decimals,
+			);
+		}
+
+		if ( ! empty( $skipped ) ) {
+			WC_Admin_Settings::add_error(
+				sprintf(
+					/* translators: %s: comma-separated chain ids. */
+					__( 'WDK Pay: ignored invalid “Additional chains” entries for chain id(s) %s. Each needs a numeric chainId, a valid rpcUrl, and a 0x tokenAddress.', 'wdk-pay' ),
+					implode( ', ', $skipped )
+				)
+			);
+		}
+
+		if ( empty( $clean ) ) {
+			return '';
+		}
+
+		return (string) wp_json_encode( $clean, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+	}
+
+	/**
+	 * Parse the saved `additional_chains` JSON into a normalised, int-keyed map.
+	 *
+	 * Defensive on read: silently skips any entry without a positive chainId, a
+	 * non-empty rpcUrl, and a valid 0x tokenAddress. This is the allow-list the
+	 * multi-chain verifier resolves against, so it must never yield a half-formed
+	 * entry.
+	 *
+	 * @return array<int,array{rpc_url:string,token_address:string,decimals:int}> Map keyed by chainId.
+	 */
+	private function resolve_additional_chains() {
+		$raw = trim( (string) $this->get_option( 'additional_chains', '' ) );
+		if ( '' === $raw ) {
+			return array();
+		}
+
+		$decoded = json_decode( $raw, true );
+		if ( ! is_array( $decoded ) ) {
+			return array();
+		}
+
+		$map = array();
+		foreach ( $decoded as $cid => $entry ) {
+			$chain_id = (int) $cid;
+			if ( $chain_id <= 0 || ! is_array( $entry ) ) {
+				continue;
+			}
+
+			$rpc   = isset( $entry['rpcUrl'] ) ? esc_url_raw( trim( (string) $entry['rpcUrl'] ) ) : '';
+			$token = isset( $entry['tokenAddress'] ) ? WDK_Pay_Verifier::normalize_address( (string) $entry['tokenAddress'] ) : '';
+			if ( '' === $rpc || '' === $token ) {
+				continue;
+			}
+
+			$decimals = isset( $entry['decimals'] ) ? (int) $entry['decimals'] : WDK_Pay_Intent::DECIMALS;
+			if ( $decimals < 0 || $decimals > 36 ) {
+				$decimals = WDK_Pay_Intent::DECIMALS;
+			}
+
+			$map[ $chain_id ] = array(
+				'rpc_url'       => $rpc,
+				'token_address' => $token,
+				'decimals'      => $decimals,
+			);
+		}
+
+		return $map;
+	}
+
+	/**
+	 * Resolve the chain a payment settled on, STRICTLY from the merchant's
+	 * configured set: the primary chain or an explicitly-listed "additional
+	 * chain". The reported chainId is attacker-controlled, so an unconfigured id
+	 * returns null and the caller rejects the confirmation — we never fall back to
+	 * a default/unknown RPC or token.
+	 *
+	 * @param int $chain_id Reported numeric chain id (0 = treat as the primary chain).
+	 * @return array{chain_id:int,chain_key:string,rpc_url:string,token_address:string,decimals:int}|null Resolved chain, or null when not accepted.
+	 */
+	public function resolve_chain( $chain_id ) {
+		$settings   = $this->get_resolved_settings();
+		$primary_id = WDK_Pay_Chains::chain_id_for( $settings['chain'] );
+		$chain_id   = (int) $chain_id;
+
+		// No/zero chainId (legacy widget) or the configured primary chain.
+		if ( 0 === $chain_id || $chain_id === $primary_id ) {
+			$asset    = WDK_Pay_Chains::asset( $settings['chain'], $settings['asset'] );
+			$decimals = ( $asset && isset( $asset['decimals'] ) ) ? (int) $asset['decimals'] : WDK_Pay_Intent::DECIMALS;
+
+			return array(
+				'chain_id'      => $primary_id,
+				'chain_key'     => (string) $settings['chain'],
+				'rpc_url'       => (string) $settings['rpc_url'],
+				'token_address' => (string) $settings['token_address'],
+				'decimals'      => $decimals,
+			);
+		}
+
+		// An explicitly-configured additional chain (strict allow-list).
+		$additional = isset( $settings['additional_chains'] ) ? $settings['additional_chains'] : array();
+		if ( isset( $additional[ $chain_id ] ) ) {
+			$entry = $additional[ $chain_id ];
+
+			return array(
+				'chain_id'      => $chain_id,
+				'chain_key'     => WDK_Pay_Chains::key_for_chain_id( $chain_id ),
+				'rpc_url'       => (string) $entry['rpc_url'],
+				'token_address' => (string) $entry['token_address'],
+				'decimals'      => (int) $entry['decimals'],
+			);
+		}
+
+		// Reported a chain the merchant has not configured — reject.
+		return null;
+	}
+
+	/**
+	 * The additional-chain token map for the widget: chainId → tokenAddress.
+	 *
+	 * The primary chain is carried by the intent itself (`chainId`/`tokenAddress`),
+	 * so this returns only the extra accepted chains. The widget merges the two to
+	 * decide where the shopper may pay without a forced network switch.
+	 *
+	 * @return array<int,string> Map of chainId → token address (empty when none).
+	 */
+	public function accepted_chains_map() {
+		$additional = $this->resolve_additional_chains();
+		$map        = array();
+		foreach ( $additional as $chain_id => $entry ) {
+			$map[ (int) $chain_id ] = (string) $entry['token_address'];
+		}
+
+		return $map;
 	}
 
 	/**
@@ -871,23 +1066,36 @@ JS;
 		}
 
 		$settings = $this->get_resolved_settings();
-		$asset    = WDK_Pay_Chains::asset( $settings['chain'], $settings['asset'] );
-		$decimals = ( $asset && isset( $asset['decimals'] ) ) ? (int) $asset['decimals'] : WDK_Pay_Intent::DECIMALS;
+
+		// Refund on the chain the payment actually settled on (multi-chain), falling
+		// back to the primary chain for older orders with no recorded chain id.
+		$paid_chain_id = (int) $order->get_meta( WDK_Pay_REST::META_CHAIN_ID );
+		$chain         = $this->resolve_chain( $paid_chain_id );
+		if ( null === $chain ) {
+			$chain = $this->resolve_chain( 0 );
+		}
+
+		$decimals = (int) $chain['decimals'];
 		$amount   = ( null === $amount ) ? (float) $order->get_total() : (float) $amount;
 		if ( $amount <= 0 ) {
 			return new WP_Error( 'wdk_refund', __( 'Refund amount must be greater than zero.', 'wdk-pay' ) );
 		}
 		$amount_base = WDK_Pay_Intent::to_base_units( (string) $amount, $decimals );
 
+		// Symbol is only meaningful for the primary asset; additional chains are USDt.
+		$on_primary  = ( (int) $chain['chain_id'] === WDK_Pay_Chains::chain_id_for( $settings['chain'] ) );
+		$symbol      = $on_primary ? strtoupper( (string) $settings['asset'] ) : 'USDt';
+		$chain_label = '' !== $chain['chain_key'] ? $chain['chain_key'] : ( 'chain ' . (int) $chain['chain_id'] );
+
 		$order->add_order_note(
 			sprintf(
 				/* translators: 1: amount, 2: asset symbol, 3: payer address, 4: token address, 5: chain. */
 				__( 'WDK Pay refund recorded: send %1$s %2$s to %3$s (token %4$s on %5$s). Settlement is self-custodial.', 'wdk-pay' ),
 				rtrim( rtrim( number_format( $amount, $decimals, '.', '' ), '0' ), '.' ),
-				strtoupper( (string) $settings['asset'] ),
+				$symbol,
 				$payer,
-				(string) $settings['token_address'],
-				(string) $settings['chain']
+				(string) $chain['token_address'],
+				$chain_label
 			)
 		);
 
@@ -898,8 +1106,8 @@ JS;
 				'status'     => 'refunded',
 				'to'         => $payer,
 				'amountBase' => (string) $amount_base,
-				'token'      => (string) $settings['token_address'],
-				'chainId'    => WDK_Pay_Chains::chain_id_for( $settings['chain'] ),
+				'token'      => (string) $chain['token_address'],
+				'chainId'    => (int) $chain['chain_id'],
 				'reason'     => (string) $reason,
 			)
 		);
@@ -983,6 +1191,13 @@ JS;
 	 */
 	private function build_widget_config( $order, array $settings ) {
 		$intent = ( new WDK_Pay_Intent( $order, $settings ) )->to_array();
+
+		// Multi-chain: advertise any extra accepted chains (chainId → token) so the
+		// widget can let the shopper pay on whichever chain their wallet is on.
+		$accepted = $this->accepted_chains_map();
+		if ( ! empty( $accepted ) ) {
+			$intent['acceptedChains'] = $accepted;
+		}
 
 		$config = array(
 			'intent'    => $intent,

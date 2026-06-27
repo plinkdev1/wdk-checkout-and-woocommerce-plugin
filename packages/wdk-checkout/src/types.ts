@@ -39,6 +39,14 @@ export interface PaymentIntent {
   readonly displayTotal?: string
   /** Optional ISO-4217 store currency for {@link displayTotal}, e.g. "USD". */
   readonly currency?: string
+  /**
+   * Optional additional EVM chains the merchant accepts, as `chainId → token
+   * contract address`. When the shopper's wallet is already on one of these (or
+   * the primary {@link chainId}), the widget pays there — no chain switch — using
+   * that chain's token, and reports the chain it paid on so the server verifies on
+   * the matching RPC. The primary chain need not be repeated here.
+   */
+  readonly acceptedChains?: Readonly<Record<number, string>>
 }
 
 /** The full config object the merchant page exposes as `window.WDK_PAY`. */

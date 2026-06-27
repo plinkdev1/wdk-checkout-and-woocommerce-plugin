@@ -176,6 +176,29 @@ class WDK_Pay_Chains {
 	}
 
 	/**
+	 * Reverse lookup: the registry chain key for a numeric EVM chain id.
+	 *
+	 * Used by the multi-chain flow to recover an explorer/label for a chain the
+	 * shopper paid on. Returns '' when the chain id is not in the built-in
+	 * registry (e.g. a merchant-added "additional chain"), in which case callers
+	 * degrade gracefully (no explorer link).
+	 *
+	 * @param int $chain_id Numeric EVM chain id.
+	 * @return string Chain key (e.g. "polygon"), or '' when unknown.
+	 */
+	public static function key_for_chain_id( $chain_id ) {
+		$chain_id = (int) $chain_id;
+
+		foreach ( self::all() as $key => $chain ) {
+			if ( (int) $chain['chainId'] === $chain_id ) {
+				return $key;
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Build a block explorer URL for a transaction hash.
 	 *
 	 * @param string $key  Chain key.

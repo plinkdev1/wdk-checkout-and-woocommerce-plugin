@@ -27,12 +27,12 @@ import { paymentReducer, INITIAL_PAYMENT_STATE, type PaymentState } from './paym
 const TX_RE = /^0x[0-9a-fA-F]{64}$/
 
 /** POST the confirm endpoint exactly like the vanilla widget does. */
-async function postConfirm (config: WdkPayConfig, txHash: string): Promise<'confirmed' | 'pending' | 'failed'> {
+async function postConfirm (config: WdkPayConfig, txHash: string, chainId?: number): Promise<'confirmed' | 'pending' | 'failed'> {
   try {
     const res = await fetch(config.endpoints.confirm, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': config.nonce },
-      body: JSON.stringify({ orderKey: config.intent.orderKey, txHash, chainId: config.intent.chainId }),
+      body: JSON.stringify({ orderKey: config.intent.orderKey, txHash, chainId: chainId ?? config.intent.chainId }),
     })
     const data = (await res.json()) as { status?: string }
     if (data.status === 'confirmed') return 'confirmed'
@@ -67,9 +67,9 @@ export function useWdkPayment (config: WdkPayConfig): UseWdkPayment {
   // Clear any polling when the consumer unmounts.
   useEffect(() => stopPoll, [stopPoll])
 
-  const runConfirm = useCallback(async (txHash: string) => {
+  const runConfirm = useCallback(async (txHash: string, chainId?: number) => {
     dispatch({ type: 'status', status: 'confirming' })
-    const first = await postConfirm(config, txHash)
+    const first = await postConfirm(config, txHash, chainId)
     if (first === 'confirmed') { dispatch({ type: 'status', status: 'confirmed' }); return }
     if (first === 'failed') {
       dispatch({ type: 'fail', error: new CheckoutError('VERIFICATION_FAILED', 'We could not verify that transaction. Check the hash, amount, and recipient.') })
@@ -77,7 +77,7 @@ export function useWdkPayment (config: WdkPayConfig): UseWdkPayment {
     }
     stopPoll()
     pollRef.current = setInterval(() => {
-      void postConfirm(config, txHash).then((s) => {
+      void postConfirm(config, txHash, chainId).then((s) => {
         if (s === 'confirmed') { stopPoll(); dispatch({ type: 'status', status: 'confirmed' }) } else if (s === 'failed') { stopPoll(); dispatch({ type: 'fail', error: new CheckoutError('VERIFICATION_FAILED', 'Verification failed.') }) }
       })
     }, 5000)
@@ -87,9 +87,9 @@ export function useWdkPayment (config: WdkPayConfig): UseWdkPayment {
     try {
       dispatch({ type: 'reset' })
       dispatch({ type: 'status', status: 'connecting' })
-      const txHash = await payIntent(config.intent)
-      dispatch({ type: 'submitted', txHash })
-      await runConfirm(txHash)
+      const { hash, chainId } = await payIntent(config.intent)
+      dispatch({ type: 'submitted', txHash: hash })
+      await runConfirm(hash, chainId)
     } catch (e) {
       dispatch({ type: 'fail', error: toCheckoutError(e) })
     }

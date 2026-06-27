@@ -58,6 +58,13 @@ class WDK_Pay_REST {
 	const META_FROM = '_wdk_pay_from';
 
 	/**
+	 * Order meta key for the numeric chain id a payment settled on (multi-chain).
+	 *
+	 * @var string
+	 */
+	const META_CHAIN_ID = '_wdk_pay_chain_id';
+
+	/**
 	 * Register REST routes.
 	 *
 	 * @return void
@@ -211,20 +218,24 @@ class WDK_Pay_REST {
 		$to_address    = $settings['receiving_address'];
 		$confirmations = (int) $settings['confirmations'];
 
-		// Resolve the accepted asset (token + decimals) exactly as the intent does,
-		// so verification matches what the customer was asked to pay (USDt or XAUt).
-		$chain_key = isset( $settings['chain'] ) ? (string) $settings['chain'] : 'ethereum';
-		$asset_key = isset( $settings['asset'] ) ? (string) $settings['asset'] : 'usdt';
-		$asset     = WDK_Pay_Chains::asset( $chain_key, $asset_key );
-		$decimals  = ( $asset && isset( $asset['decimals'] ) ) ? (int) $asset['decimals'] : WDK_Pay_Intent::DECIMALS;
-
-		if ( ! empty( $settings['token_address'] ) ) {
-			$token_address = (string) $settings['token_address'];
-		} elseif ( $asset && ! empty( $asset['token'] ) ) {
-			$token_address = (string) $asset['token'];
-		} else {
-			$token_address = WDK_Pay_Chains::token_for( $chain_key );
+		// Multi-chain: resolve the chain the customer paid on STRICTLY from the
+		// merchant's configured set (the primary chain plus any "additional chains").
+		// The reported chainId is attacker-controlled, so an unconfigured chain is
+		// rejected outright — we never verify against an unknown RPC or token. The
+		// resolved chain dictates the RPC endpoint, token contract, and decimals.
+		$reported_chain_id = (int) $request->get_param( 'chainId' );
+		$chain             = $gateway->resolve_chain( $reported_chain_id );
+		if ( null === $chain ) {
+			return $this->respond(
+				array(
+					'status'  => WDK_Pay_Verifier::FAILED,
+					'message' => __( 'This payment chain is not accepted by the store.', 'wdk-pay' ),
+				)
+			);
 		}
+
+		$token_address = (string) $chain['token_address'];
+		$decimals      = (int) $chain['decimals'];
 
 		// Required amount in base units from the order total, in the asset's decimals.
 		$min_amount_base = WDK_Pay_Intent::to_base_units( (string) $order->get_total(), $decimals );
@@ -232,12 +243,12 @@ class WDK_Pay_REST {
 		// Record the submitted hash early so /status reflects an in-flight attempt.
 		$this->store_pending_attempt( $order, $tx_hash, $from );
 
-		$verifier = new WDK_Pay_Verifier( $settings['rpc_url'] );
+		$verifier = new WDK_Pay_Verifier( $chain['rpc_url'] );
 		$result   = $verifier->verify( $tx_hash, $token_address, $to_address, $min_amount_base, $confirmations );
 
 		switch ( $result['status'] ) {
 			case WDK_Pay_Verifier::CONFIRMED:
-				return $this->respond( $this->complete_order( $order, $tx_hash, $settings ) );
+				return $this->respond( $this->complete_order( $order, $tx_hash, $settings, $chain ) );
 
 			case WDK_Pay_Verifier::PENDING:
 				$order->update_meta_data( self::META_STATUS, WDK_Pay_Verifier::PENDING );
@@ -331,13 +342,18 @@ class WDK_Pay_REST {
 	 * @param WC_Order            $order    The order.
 	 * @param string              $tx_hash  Confirmed transaction hash.
 	 * @param array<string,mixed> $settings Resolved gateway settings.
+	 * @param array<string,mixed> $chain    Resolved chain the payment settled on
+	 *                                       (chain_id, chain_key, token_address, …).
 	 * @return array{status:string,orderId:int,txHash:string} Response payload.
 	 */
-	private function complete_order( $order, $tx_hash, array $settings ) {
+	private function complete_order( $order, $tx_hash, array $settings, array $chain ) {
 		$order->update_meta_data( self::META_TX_HASH, $tx_hash );
 		$order->update_meta_data( self::META_STATUS, WDK_Pay_Verifier::CONFIRMED );
+		$order->update_meta_data( self::META_CHAIN_ID, (int) $chain['chain_id'] );
 
-		$explorer = WDK_Pay_Chains::explorer_tx( $settings['chain'], $tx_hash );
+		// Explorer link only when the settling chain is in the built-in registry
+		// (an "additional chain" may have no known explorer — degrade gracefully).
+		$explorer = '' !== $chain['chain_key'] ? WDK_Pay_Chains::explorer_tx( (string) $chain['chain_key'], $tx_hash ) : '';
 		$note     = sprintf(
 			/* translators: 1: transaction hash, 2: explorer URL. */
 			__( 'USDt payment confirmed on-chain. Tx: %1$s (%2$s)', 'wdk-pay' ),
@@ -355,8 +371,8 @@ class WDK_Pay_REST {
 			array(
 				'status'  => WDK_Pay_Verifier::CONFIRMED,
 				'txHash'  => $tx_hash,
-				'chainId' => WDK_Pay_Chains::chain_id_for( $settings['chain'] ),
-				'token'   => (string) $settings['token_address'],
+				'chainId' => (int) $chain['chain_id'],
+				'token'   => (string) $chain['token_address'],
 			)
 		);
 
