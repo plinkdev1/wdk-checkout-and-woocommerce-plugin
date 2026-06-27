@@ -243,9 +243,13 @@ theming standard we set on the WDK wallet template + extension.
     React / Vue / Svelte / plain HTML identically. Config comes from a `config` JS
     property or the same `data-*` rules as the auto-mount; torn down on disconnect.
     The IIFE registers `<wdk-pay>` automatically.
-21. **Publish + host the widget.** Publish `@wdk/checkout` to npm (ESM + IIFE
-    builds) and pin a versioned CDN URL, so non-WooCommerce merchants embed
-    without a build step. (WooCommerce keeps bundling the same package.)
+21. ✅ **Publish + host the widget.** `@wdk-starter/wdk-checkout` is published on
+    npm (currently `1.1.0`; ESM + IIFE builds) alongside
+    `@wdk-starter/wdk-payment-verifier`, via a wired CI auto-publish pipeline — so
+    non-WooCommerce merchants embed without a build step, and WooCommerce keeps
+    bundling the same package. *(The new `./bitcoin` + `./sats` subpaths and the
+    Shopify/Magento integrations ride the next version bump, which CI publishes on
+    release; pinning a versioned CDN URL is the remaining hosting nicety.)*
 22. ✅ **Presentation modes.** `openCheckoutModal(config, { layout })` launches the
     checkout as a centered **modal/overlay** or a mobile **bottom-sheet**, and
     `attachCheckoutModal(trigger, config)` wires a button → dialog. The overlay is a
