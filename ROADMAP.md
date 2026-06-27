@@ -171,9 +171,12 @@ theming standard we set on the WDK wallet template + extension.
 21. **Publish + host the widget.** Publish `@wdk/checkout` to npm (ESM + IIFE
     builds) and pin a versioned CDN URL, so non-WooCommerce merchants embed
     without a build step. (WooCommerce keeps bundling the same package.)
-22. **Presentation modes.** Optional launchable **modal/overlay** mode (button →
-    dialog) and a mobile **bottom-sheet** layout, in addition to the current inline
-    mount.
+22. ✅ **Presentation modes.** `openCheckoutModal(config, { layout })` launches the
+    checkout as a centered **modal/overlay** or a mobile **bottom-sheet**, and
+    `attachCheckoutModal(trigger, config)` wires a button → dialog. The overlay is a
+    focus-trapped `role="dialog"` (Tab cycles within, Escape / backdrop / close
+    button dismiss, focus restores to the launcher) — this also lands the focus-trap
+    deferred from #18. The inline mount stays the default.
 23. **Framework wrappers.** Thin `@wdk/checkout-react` (and Vue) wrappers around
     the Web Component for idiomatic embedding + typed props.
 
