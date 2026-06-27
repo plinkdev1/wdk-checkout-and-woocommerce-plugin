@@ -333,14 +333,139 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 	}
 
 	/**
-	 * Ensure the WordPress media library is available on the gateway settings
-	 * screen (so the brand-logo picker can open it), then render the form.
+	 * Render the settings form, plus a **live preview** of the checkout widget that
+	 * re-skins itself as the merchant edits the appearance fields. Also enqueues the
+	 * media library for the brand-logo picker.
 	 *
 	 * @return void
 	 */
 	public function admin_options() {
 		wp_enqueue_media();
 		parent::admin_options();
+		$this->render_admin_preview();
+	}
+
+	/**
+	 * Output the live-preview container + script. Mounts the real widget bundle
+	 * (which exposes `window.WdkCheckout`) against a sample intent, and re-renders
+	 * — debounced — whenever an appearance field changes, reading the current form
+	 * values for the theme palette, corner style, and brand.
+	 *
+	 * @return void
+	 */
+	private function render_admin_preview() {
+		$handle = 'wdk-pay-checkout-admin';
+		wp_enqueue_script(
+			$handle,
+			plugins_url( 'assets/js/wdk-checkout.js', WDK_PAY_PLUGIN_FILE ),
+			array(),
+			WDK_PAY_VERSION,
+			true
+		);
+
+		$data = array(
+			'base'           => array(
+				'intent'    => array(
+					'orderId'          => 0,
+					'orderKey'         => 'preview',
+					'amount'           => '19.99',
+					'amountBase'       => '19990000',
+					'decimals'         => 6,
+					'tokenAddress'     => '0x0000000000000000000000000000000000000000',
+					'tokenSymbol'      => 'USDt',
+					'chainId'          => 1,
+					'chainName'        => 'Ethereum',
+					'chainKey'         => 'ethereum',
+					'receivingAddress' => '0x0000000000000000000000000000000000000000',
+					'reference'        => '0x0',
+					'status'           => 'pending',
+					'expiresAt'        => time() + 1800,
+					'displayTotal'     => '19.99',
+					'currency'         => 'USD',
+				),
+				'endpoints' => array(
+					'confirm' => '',
+					'status'  => '',
+				),
+				'nonce'     => 'preview',
+				'returnUrl' => '',
+			),
+			'colorFields'    => array(
+				'accent'     => $this->get_field_key( 'theme_accent' ),
+				'accentText' => $this->get_field_key( 'theme_accent_text' ),
+				'surface'    => $this->get_field_key( 'theme_surface' ),
+				'onSurface'  => $this->get_field_key( 'theme_on_surface' ),
+			),
+			'radiusField'    => $this->get_field_key( 'theme_radius' ),
+			'radiusMap'      => array(
+				'sharp'   => '4px',
+				'soft'    => '10px',
+				'rounded' => '14px',
+				'pill'    => '22px',
+			),
+			'brandNameField' => $this->get_field_key( 'brand_name' ),
+			'brandLogoField' => $this->get_field_key( 'brand_logo' ),
+			'heading'        => __( 'Live preview', 'wdk-pay' ),
+			'note'           => __( 'Updates as you edit the appearance fields above. Save to apply.', 'wdk-pay' ),
+		);
+
+		wp_add_inline_script( $handle, 'window.WDK_PAY_ADMIN=' . wp_json_encode( $data ) . ';' . $this->admin_preview_script(), 'after' );
+
+		echo '<h3 id="wdk-pay-preview-heading" style="margin-top:24px">' . esc_html( $data['heading'] ) . '</h3>';
+		echo '<p class="description">' . esc_html( $data['note'] ) . '</p>';
+		echo '<div style="max-width:460px;padding:18px;background:#f6f7f7;border:1px solid #dcdcde;border-radius:10px"><div id="wdk-pay-admin-preview"></div></div>';
+	}
+
+	/**
+	 * The admin live-preview browser script (rendered inline after the widget bundle).
+	 *
+	 * @return string JavaScript source.
+	 */
+	private function admin_preview_script() {
+		return <<<'JS'
+(function(){
+  var C = window.WDK_PAY_ADMIN; if(!C){return;}
+  function val(id){ var e=document.getElementById(id); return e ? String(e.value||'').trim() : ''; }
+  function hex(v){ return /^#[0-9A-Fa-f]{6}$/.test(v) ? v : ''; }
+  function buildConfig(){
+    var theme = {};
+    Object.keys(C.colorFields).forEach(function(k){ var v = hex(val(C.colorFields[k])); if(v){ theme[k] = v; } });
+    var rk = val(C.radiusField); if(C.radiusMap[rk]){ theme.radius = C.radiusMap[rk]; }
+    var brand = {};
+    var bn = val(C.brandNameField); if(bn){ brand.name = bn; }
+    var bl = val(C.brandLogoField); if(bl){ brand.logoUrl = bl; }
+    var cfg = JSON.parse(JSON.stringify(C.base));
+    if(Object.keys(theme).length){ cfg.theme = theme; }
+    if(Object.keys(brand).length){ cfg.brand = brand; }
+    return cfg;
+  }
+  var teardown;
+  function rerender(){
+    var root = document.getElementById('wdk-pay-admin-preview');
+    if(!root || !window.WdkCheckout){ return; }
+    if(teardown){ try{ teardown(); }catch(e){} }
+    root.innerHTML = '';
+    try{ teardown = window.WdkCheckout.mountCheckout(root, buildConfig()); }
+    catch(e){ root.textContent = String((e && e.message) || e); }
+  }
+  var deb;
+  function onChange(){ clearTimeout(deb); deb = setTimeout(rerender, 200); }
+  function fields(){
+    var ids = [C.radiusField, C.brandNameField, C.brandLogoField];
+    Object.keys(C.colorFields).forEach(function(k){ ids.push(C.colorFields[k]); });
+    return ids;
+  }
+  function init(){
+    if(!window.WdkCheckout){ setTimeout(init, 80); return; }
+    rerender();
+    fields().forEach(function(id){
+      var e = document.getElementById(id);
+      if(e){ e.addEventListener('input', onChange); e.addEventListener('change', onChange); }
+    });
+  }
+  if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+JS;
 	}
 
 	/**

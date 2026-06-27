@@ -1,5 +1,7 @@
 import { mountCheckout } from './widget.js'
 import { defineWdkPayElement } from './web-component.js'
+import { openCheckoutModal, attachCheckoutModal } from './modal.js'
+import { resolveCheckoutTheme } from './types.js'
 import type { WdkPayConfig } from './types.js'
 
 /**
@@ -73,6 +75,16 @@ export function autoMount (doc: Document, globals: Globals): void {
 }
 
 function boot (): void {
+  // Expose a small programmatic API on the global for hosts that mount/re-mount
+  // imperatively (e.g. the WooCommerce admin live preview, or any embedder).
+  ;(window as unknown as { WdkCheckout?: unknown }).WdkCheckout = {
+    mountCheckout,
+    openCheckoutModal,
+    attachCheckoutModal,
+    resolveCheckoutTheme,
+    defineWdkPayElement,
+    autoMount,
+  }
   defineWdkPayElement() // register <wdk-pay> for the drop-in/Web-Component path
   autoMount(document, window as unknown as Globals)
 }

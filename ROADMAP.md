@@ -139,9 +139,12 @@ theming standard we set on the WDK wallet template + extension.
     `status`, `countdown`, `footer`), and `WdkPayConfig.customCss` injects raw CSS
     as a `<style>` scoped under the root (torn down with the widget) — pixel control
     beyond the token set, e.g. `[data-wdk="pay-button"]{letter-spacing:.04em}`.
-16. **Live preview in admin.** Render the themed widget live in the WooCommerce
-    settings page as the merchant edits colors / logo / fonts (today they save,
-    then check the order-pay screen).
+16. ✅ **Live preview in admin.** The gateway settings screen renders the real
+    widget against a sample intent and **re-skins it live** as the merchant edits
+    the appearance fields (accent / text / surface colors, corner style, brand name
+    + logo) — debounced re-mount, no save needed to see it. The IIFE now exposes a
+    `window.WdkCheckout` API (`mountCheckout`, `openCheckoutModal`,
+    `resolveCheckoutTheme`, …) that the admin preview (and any embedder) drives.
 17. ✅ **Localization (i18n).** Every user-facing widget string (tabs, pay/confirm
     buttons, manual-entry labels, status messages, countdown, footer) now routes
     through a `CheckoutStrings` contract. Pass `strings` (a partial or a full locale
