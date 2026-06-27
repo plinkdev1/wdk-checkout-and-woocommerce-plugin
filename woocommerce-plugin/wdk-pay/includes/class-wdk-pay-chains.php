@@ -50,6 +50,11 @@ class WDK_Pay_Chains {
 						'decimals' => 6,
 						'token'    => '0x68749665FF8D2d112Fa859AA293F07A622782F38',
 					),
+					'usdc' => array(
+						'symbol'   => 'USDC',
+						'decimals' => 6,
+						'token'    => '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+					),
 				),
 			),
 			'polygon'  => array(
@@ -64,6 +69,11 @@ class WDK_Pay_Chains {
 						'decimals' => 6,
 						'token'    => '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
 					),
+					'usdc' => array(
+						'symbol'   => 'USDC',
+						'decimals' => 6,
+						'token'    => '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+					),
 				),
 			),
 			'arbitrum' => array(
@@ -77,6 +87,11 @@ class WDK_Pay_Chains {
 						'symbol'   => 'USDt',
 						'decimals' => 6,
 						'token'    => '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+					),
+					'usdc' => array(
+						'symbol'   => 'USDC',
+						'decimals' => 6,
+						'token'    => '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
 					),
 				),
 			),
@@ -93,6 +108,7 @@ class WDK_Pay_Chains {
 		return array(
 			'usdt' => 'USDt — Tether USD',
 			'xaut' => 'XAUt — Tether Gold',
+			'usdc' => 'USDC — USD Coin',
 		);
 	}
 

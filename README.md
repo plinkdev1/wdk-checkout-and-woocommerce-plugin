@@ -29,7 +29,7 @@ This is that reference. It turns any WooCommerce store into a **self-custodial U
 
 | Component | What it is |
 |---|---|
-| **`woocommerce-plugin/wdk-pay/`** | A complete WooCommerce **payment gateway plugin** (PHP): admin settings, the "Pay with USDt/XAUt" gateway, REST endpoints, and on-chain payment verification. |
+| **`woocommerce-plugin/wdk-pay/`** | A complete WooCommerce **payment gateway plugin** (PHP): admin settings, the "Pay with USDt/XAUt/USDC" gateway, REST endpoints, and on-chain payment verification. |
 | **`packages/wdk-checkout/`** | A headless, **themeable** **checkout widget / SDK** (TypeScript): connect a wallet and pay, or pay manually and confirm by tx hash. Builds to a single asset the plugin loads. |
 | **`packages/wdk-checkout/x402`** | An **x402 facilitator** (TypeScript): verify per-request payments from bots/agents off-chain. |
 | **`packages/wdk-payment-verifier/`** | A **server-side payment verifier** (TypeScript): `verify(intent, txHash)` / `watch(intent)` confirm a USDt transfer to the merchant with N confirmations over JSON-RPC — the Node/headless counterpart to the plugin's PHP verifier. |
@@ -71,13 +71,17 @@ For customers with no native gas token, the checkout can use **EIP-3009 `transfe
 correctly — and the same package powers an on-chain **Bitcoin** gateway (BIP-21 QR,
 verified via Esplora) alongside USDt and Lightning.
 
-| USDt checkout (live widget) | XAUt — Tether Gold | Bitcoin on-chain checkout |
+| USDt checkout (live widget) | XAUt — Tether Gold | USDC — USD Coin |
 |:--:|:--:|:--:|
-| ![USDt checkout with the real Tether mark](./media/screenshots/checkout-usdt.png) | ![XAUt (Tether Gold) checkout with the real gold ₮ mark](./media/screenshots/checkout-xaut.png) | ![Bitcoin on-chain checkout — BIP-21 QR](./media/screenshots/checkout-bitcoin.png) |
+| ![USDt checkout with the real Tether mark](./media/screenshots/checkout-usdt.png) | ![XAUt (Tether Gold) checkout with the real gold ₮ mark](./media/screenshots/checkout-xaut.png) | ![USDC checkout with the real Circle USDC mark](./media/screenshots/checkout-usdc.png) |
+
+| Bitcoin on-chain checkout (BIP-21 QR) |
+|:--:|
+| ![Bitcoin on-chain checkout — BIP-21 QR](./media/screenshots/checkout-bitcoin.png) |
 
 The same asset-agnostic widget renders every rail with the **genuine token logo**
-(embedded, always correct): the green Tether ₮, the gold Tether Gold ₮, Bitcoin ₿,
-and the Ethereum diamond.
+(embedded, always correct): the green Tether ₮, the gold Tether Gold ₮, the Circle
+USDC mark, Bitcoin ₿, and the Ethereum diamond.
 
 ![Real USD₮ / Tether Gold / BTC / ETH marks](./media/screenshots/token-marks.png)
 
@@ -110,7 +114,7 @@ woocommerce-plugin/wdk-pay/
 └── assets/js/wdk-checkout.js             # the built checkout widget
 ```
 
-Two gateways ship in the plugin: **Pay with USDt/XAUt** (on-chain, verified over
+Two gateways ship in the plugin: **Pay with USDt/XAUt/USDC** (on-chain, verified over
 JSON-RPC) and **Pay with Lightning** (a BOLT11 invoice minted server-side against a
 Lightning backend you control — a Spark service, LNbits, or LND-REST; pays into
 your own wallet). Install it like any WooCommerce plugin and configure the gateway
@@ -183,7 +187,7 @@ colors, plus a **corner style** (sharp / soft / rounded / pill). The plugin maps
 those to a `CheckoutTheme` partial and hands it to the widget as `WDK_PAY.theme`,
 so a merchant re-skins the checkout to match their storefront entirely from the
 admin — leave a color blank to keep the WDK default. The rest of the merchant
-payment settings (method title/description, chain, **asset USDt/XAUt**, RPC,
+payment settings (method title/description, chain, **asset USDt/XAUt/USDC**, RPC,
 confirmations, window) live in the same admin screen.
 
 ## x402 — charge bots, crawlers & AI agents
@@ -225,7 +229,7 @@ settles it on-chain. See [`ROADMAP.md`](./ROADMAP.md).
 ## Roadmap
 
 📍 **Full phased roadmap: [`ROADMAP.md`](./ROADMAP.md).** Shipping today:
-self-custodial USDt/XAUt checkout + on-chain verification + gasless EIP-3009, the
+self-custodial USDt/XAUt/USDC checkout + on-chain verification + gasless EIP-3009, the
 x402 facilitator, and the four ecommerce-rail SDK modules — **fiat pricing
 display**, **swap-to-settle**, **subscriptions** (recurring EIP-3009), and
 **Lightning (Spark)** invoice/settle. Still sequenced: multi-chain auto-detect,

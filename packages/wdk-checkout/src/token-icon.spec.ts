@@ -8,7 +8,7 @@ afterEach(() => { configureTokenIcons({ baseUrl: DEFAULT_BASE }) })
 describe('tokenIconUrl', () => {
   it('uppercases the symbol and points at the @web3icons branded set (non-builtin tokens)', () => {
     expect(tokenIconUrl('arb')).toBe(`${DEFAULT_BASE}/ARB.svg`)
-    expect(tokenIconUrl('usdc')).toBe(`${DEFAULT_BASE}/USDC.svg`)
+    expect(tokenIconUrl('dai')).toBe(`${DEFAULT_BASE}/DAI.svg`)
   })
 
   it('returns the embedded Tether brand mark for USDt / XAUt (always correct, offline)', () => {
@@ -21,6 +21,14 @@ describe('tokenIconUrl', () => {
     // green disc for USD₮, gold disc for Tether Gold
     expect(decodeURIComponent(tokenIconUrl('USDT'))).toContain('#26A17B')
     expect(decodeURIComponent(tokenIconUrl('XAUT'))).toContain('#C7A647')
+  })
+
+  it('returns the real USDC mark (embedded Circle-blue disc, offline-correct)', () => {
+    const usdc = tokenIconUrl('usdc')
+    expect(usdc.startsWith('data:image/svg+xml')).toBe(true)
+    expect(decodeURIComponent(usdc)).toContain('#3E73C4')
+    // case-insensitive
+    expect(decodeURIComponent(tokenIconUrl('USDC'))).toContain('#3E73C4')
   })
 
   it('returns the real Bitcoin / Ethereum marks (embedded, offline-correct)', () => {

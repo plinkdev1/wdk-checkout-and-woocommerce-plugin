@@ -23,11 +23,15 @@
 
 ## 🚧 Phase 2 — More assets & rails at checkout
 
-1. ✅ **Multi-asset (USDt + XAUt)** — the gateway now offers an **Accepted asset**
-   setting (USDt — Tether USD / XAUt — Tether Gold). The chain registry carries a
-   per-chain asset map (token + decimals); the intent and on-chain verifier resolve
-   the chosen asset, falling back to USDt on chains where it isn't deployed. The
-   checkout widget is already asset-agnostic. Next: USDC + per-product currency.
+1. ✅ **Multi-asset (USDt + XAUt + USDC)** — the gateway offers an **Accepted asset**
+   setting (USDt — Tether USD / XAUt — Tether Gold / USDC — USD Coin). The chain
+   registry carries a per-chain asset map (token + decimals); the intent and
+   on-chain verifier resolve the chosen asset, falling back to USDt on chains where
+   it isn't deployed. **USDC** settles via Circle's canonical **native** USDC on
+   Ethereum, Polygon, and Arbitrum (contract addresses verified against CoinGecko),
+   with the real Circle USDC mark embedded in the widget (same MIT cryptocurrency-
+   icons source as the BTC/ETH marks). The checkout widget is asset-agnostic. Next:
+   per-product currency override.
 2. ✅ **Multi-chain auto-detect** — the shopper pays on whichever supported EVM
    chain their wallet is already on; the gateway verifies on **that** chain. The
    merchant lists extra chains as an **Additional chains** JSON map (`chainId →
