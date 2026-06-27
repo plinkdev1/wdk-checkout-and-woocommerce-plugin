@@ -1,0 +1,18 @@
+{
+  "name": "wdk-pay-shopify-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Accept self-custodial USDt on Shopify — the @wdk-starter/wdk-checkout core wired into Shopify's Payments Apps flow.",
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@wdk-starter/wdk-checkout": "file:../packages/wdk-checkout"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

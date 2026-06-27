@@ -137,8 +137,14 @@
    Component + one-tag auto-mount. `examples/merchant-server.mjs` is a
    dependency-free Node server (GET `/intent`, POST `/webhook` with signature
    verification) proving a non-WooCommerce backend wires up the same way.
-   *(⏳ Shopify app + Magento extension are platform-specific products built on
-   this core — separate follow-ups.)*
+   - ✅ **Shopify app** (`shopify-app/`) — the core wired into Shopify's **Payments
+     Apps** flow: a Node server takes a signed payment session, hosts the WDK Pay
+     widget, verifies the transfer on-chain with the new `wdk-checkout/verify`
+     (rejecting any unconfigured chainId), then `paymentSessionResolve` /
+     `paymentSessionReject` through the Payments Apps API. Funds settle straight to
+     the merchant; Shopify only learns the outcome. Tested (HMAC auth + the API
+     client with a mocked fetch).
+   - 🚧 **Magento extension** — a Magento 2 payment module on the same core (next).
 9. ✅ **Fiat on-ramp at checkout** (`@tetherto/wdk-protocol-fiat-moonpay`) — a
    pluggable `wdk-checkout/onramp` module (`buildOnrampUrl`, unit-tested) builds a
    buy-crypto URL (MoonPay default, any provider via `baseUrl`, server-signing seam
