@@ -157,9 +157,11 @@ theming standard we set on the WDK wallet template + extension.
 
 ### 5B — Drop-in embed (any stack, not only WooCommerce)
 
-19. **One-tag auto-mount.** A CDN/`<script>` build that auto-mounts from
-    `data-wdk-pay-*` attributes (`<div data-wdk-pay data-intent="…">`) with no JS
-    wiring — the lowest-friction embed for static sites and page builders.
+19. ✅ **One-tag auto-mount.** The IIFE build auto-mounts into **any** element
+    flagged `data-wdk-pay`, reading config with no JS wiring: inline `data-config`
+    JSON, a `data-config-var` named page global, or the default `window.WDK_PAY`
+    (the WooCommerce path). Idempotent per element (`data-wdk-mounted`); the pure
+    `resolveAutoConfig` precedence is unit-tested.
 20. **Web Component `<wdk-pay>`.** Wrap `mountCheckout` as a custom element with
     Shadow-DOM style isolation, so the widget can't collide with host-page CSS and
     drops into React / Vue / Svelte / plain HTML identically.
