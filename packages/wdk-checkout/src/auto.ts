@@ -1,4 +1,5 @@
 import { mountCheckout } from './widget.js'
+import { defineWdkPayElement } from './web-component.js'
 import type { WdkPayConfig } from './types.js'
 
 /**
@@ -72,6 +73,7 @@ export function autoMount (doc: Document, globals: Globals): void {
 }
 
 function boot (): void {
+  defineWdkPayElement() // register <wdk-pay> for the drop-in/Web-Component path
   autoMount(document, window as unknown as Globals)
 }
 

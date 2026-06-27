@@ -162,9 +162,12 @@ theming standard we set on the WDK wallet template + extension.
     JSON, a `data-config-var` named page global, or the default `window.WDK_PAY`
     (the WooCommerce path). Idempotent per element (`data-wdk-mounted`); the pure
     `resolveAutoConfig` precedence is unit-tested.
-20. **Web Component `<wdk-pay>`.** Wrap `mountCheckout` as a custom element with
-    Shadow-DOM style isolation, so the widget can't collide with host-page CSS and
-    drops into React / Vue / Svelte / plain HTML identically.
+20. ✅ **Web Component `<wdk-pay>`.** `mountCheckout` wrapped as a custom element
+    (`WdkPayElement` + `defineWdkPayElement`) that renders into a **Shadow root**, so
+    host-page CSS can't collide with the widget (or vice versa), and it drops into
+    React / Vue / Svelte / plain HTML identically. Config comes from a `config` JS
+    property or the same `data-*` rules as the auto-mount; torn down on disconnect.
+    The IIFE registers `<wdk-pay>` automatically.
 21. **Publish + host the widget.** Publish `@wdk/checkout` to npm (ESM + IIFE
     builds) and pin a versioned CDN URL, so non-WooCommerce merchants embed
     without a build step. (WooCommerce keeps bundling the same package.)

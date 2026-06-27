@@ -5,6 +5,8 @@
  * gateway and usable standalone in any storefront.
  */
 export { mountCheckout } from './widget.js'
+export { resolveAutoConfig, autoMount } from './auto.js'
+export { WdkPayElement, defineWdkPayElement } from './web-component.js'
 export { payIntent, connectWallet, ensureChain, ERC20_ABI } from './usdt.js'
 export { qrDataUrl } from './qr.js'
 export { createTokenIcon, tokenIconUrl, tokenChipDataUri, configureTokenIcons } from './token-icon.js'
