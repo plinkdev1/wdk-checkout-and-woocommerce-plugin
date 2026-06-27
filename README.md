@@ -130,6 +130,37 @@ mountCheckout(root, {
 Keys: `surface · onSurface · text · textMuted · textFaint · accent · accentText ·
 border · info · success · error · radius · fontFamily` (see `DEFAULT_CHECKOUT_THEME`).
 
+![Checkout theming — WDK default, institutional light, cool dark, and a custom soft-pill accent](./media/screenshots/checkout-themes.png)
+
+### Full white-label control
+
+- **Presets + light/dark.** `preset: 'wdk' | 'dark' | 'cool-dark' | 'institutional-light'`,
+  or `mode: 'light' | 'dark' | 'auto'` (`auto` follows `prefers-color-scheme`).
+- **Per-element shape.** `cardRadius` / `buttonRadius` / `inputRadius` (button edges
+  square → rounded → pill, independent of the card) and `buttonStyle: 'solid' |
+  'outline' | 'soft'`.
+- **Real fonts.** `fontUrl` loads a brand web-font (Google Fonts / `@font-face`);
+  `headingFontFamily` sets a separate display font.
+- **Logo + brand.** `brand: { name, logoUrl }` renders a header atop the widget.
+- **Localization.** `strings` overrides any label (a partial or a full locale pack).
+- **Pixel control.** Stable `data-wdk` hooks on every element + a `customCss` escape hatch.
+- **Accessible** out of the box (tablist/tabpanel ARIA, live status region, focus-trapped modal).
+
+### Drop-in anywhere (not only WooCommerce)
+
+```html
+<!-- one tag, no JS wiring -->
+<div data-wdk-pay data-config='{ "intent": { … }, "endpoints": { … } }'></div>
+<script src="https://your-cdn/wdk-checkout.js"></script>
+
+<!-- or the Web Component (Shadow-DOM isolated) -->
+<wdk-pay data-config-var="MY_CONFIG"></wdk-pay>
+```
+
+`openCheckoutModal(config, { layout: 'modal' | 'sheet' })` launches it as a dialog
+or mobile bottom-sheet; React gets `<WdkCheckout config>` + `useWdkPayment()` via
+`@wdk-starter/wdk-checkout/react`.
+
 **No code needed for WooCommerce.** The gateway admin (**WooCommerce → Settings →
 Payments → WDK Pay → Checkout appearance**) exposes native color pickers for the
 **accent / button**, **accent text**, **surface (card)**, and **surface text**
