@@ -29,6 +29,10 @@ export interface LightningInvoice {
   readonly expiresAt: number
 }
 
+// Sats math lives in the shared `sats` module (also used by the on-chain BTC
+// rail); re-exported here so `wdk-checkout/lightning` keeps the same surface.
+export { SATS_PER_BTC, btcToSats, satsForFiat, formatSats } from './sats.js'
+
 export type LightningStatus = 'pending' | 'paid' | 'expired'
 
 /** Normalized status of an invoice. */
@@ -45,27 +49,6 @@ export interface LightningInvoiceStatus {
 export interface LightningProvider {
   createInvoice (args: { amountSats: number, memo?: string, expirySeconds?: number }): Promise<LightningInvoice>
   getInvoiceStatus (id: string): Promise<LightningInvoiceStatus>
-}
-
-const SATS_PER_BTC = 100_000_000
-
-/** Convert BTC to integer satoshis (rounded). */
-export function btcToSats (btc: number): number {
-  if (!isFinite(btc) || btc < 0) throw new Error('lightning: btc must be a non-negative finite number')
-  return Math.round(btc * SATS_PER_BTC)
-}
-
-/** Satoshis needed for a fiat amount, given the BTC price in that fiat. */
-export function satsForFiat (args: { fiatAmount: number, btcPriceFiat: number }): number {
-  const { fiatAmount, btcPriceFiat } = args
-  if (!isFinite(fiatAmount) || fiatAmount < 0) throw new Error('lightning: fiatAmount must be a non-negative finite number')
-  if (!isFinite(btcPriceFiat) || btcPriceFiat <= 0) throw new Error('lightning: btcPriceFiat must be a positive finite number')
-  return Math.round((fiatAmount / btcPriceFiat) * SATS_PER_BTC)
-}
-
-/** Human display for a sats amount, e.g. "1,234 sats". */
-export function formatSats (sats: number): string {
-  return `${Math.round(sats).toLocaleString('en-US')} sats`
 }
 
 /** Map a backend's status field to the normalized {@link LightningStatus}. */

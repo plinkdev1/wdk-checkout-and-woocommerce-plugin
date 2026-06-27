@@ -7,7 +7,7 @@ afterEach(() => { configureTokenIcons({ baseUrl: DEFAULT_BASE }) })
 
 describe('tokenIconUrl', () => {
   it('uppercases the symbol and points at the @web3icons branded set (non-builtin tokens)', () => {
-    expect(tokenIconUrl('eth')).toBe(`${DEFAULT_BASE}/ETH.svg`)
+    expect(tokenIconUrl('arb')).toBe(`${DEFAULT_BASE}/ARB.svg`)
     expect(tokenIconUrl('usdc')).toBe(`${DEFAULT_BASE}/USDC.svg`)
   })
 
@@ -21,6 +21,19 @@ describe('tokenIconUrl', () => {
     // green disc for USD₮, gold disc for Tether Gold
     expect(decodeURIComponent(tokenIconUrl('USDT'))).toContain('#26A17B')
     expect(decodeURIComponent(tokenIconUrl('XAUT'))).toContain('#C7A647')
+  })
+
+  it('returns the real Bitcoin / Ethereum marks (embedded, offline-correct)', () => {
+    // BTC: official orange disc.
+    const btc = tokenIconUrl('btc')
+    expect(btc.startsWith('data:image/svg+xml')).toBe(true)
+    expect(decodeURIComponent(btc)).toContain('#F7931A')
+    expect(decodeURIComponent(tokenIconUrl('WBTC'))).toContain('#F7931A')
+    // ETH: official periwinkle disc + diamond facets.
+    const eth = tokenIconUrl('ETH')
+    expect(eth.startsWith('data:image/svg+xml')).toBe(true)
+    expect(decodeURIComponent(eth)).toContain('#627EEA')
+    expect(decodeURIComponent(tokenIconUrl('weth'))).toContain('#627EEA')
   })
 
   it('strips non-alphanumerics (so odd symbols still form a valid filename)', () => {

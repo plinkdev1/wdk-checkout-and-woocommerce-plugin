@@ -59,6 +59,14 @@
       "types": "./dist/lightning.d.ts",
       "default": "./dist/lightning.js"
     },
+    "./bitcoin": {
+      "types": "./dist/bitcoin.d.ts",
+      "default": "./dist/bitcoin.js"
+    },
+    "./sats": {
+      "types": "./dist/sats.d.ts",
+      "default": "./dist/sats.js"
+    },
     "./react": {
       "types": "./dist/react.d.ts",
       "default": "./dist/react.js"

@@ -61,7 +61,31 @@
      `payment_complete()`. PHP mirror of the JS rail (`class-wdk-pay-lightning-*`).
      The customer pays from any Lightning wallet (incl. a WDK Spark wallet).
    - Follow-up: a live BTC price feed (the gateway uses a configured rate today).
-4. **Bitcoin on-chain** — accept BTC via the engine's BIP-84 support.
+4. ✅ **Bitcoin on-chain** — accept native BTC (BIP-84 / bech32), done end-to-end
+   (rail **and** a live WooCommerce gateway).
+   - ✅ **Rail** — the `wdk-checkout/bitcoin` module: build a BIP-21 request
+     (address + sats + URI), then watch the address to settlement. Address
+     derivation is pluggable via a `BitcoinAddressSource` (`staticAddressSource`,
+     or `accountAddressSource` to derive a fresh BIP-84 address per order from a
+     WDK `@tetherto/wdk-wallet-btc` account — the package imports no SDK); chain
+     watching is pluggable via a `BitcoinWatcher`, with `createEsploraWatcher`
+     wiring any Esplora/mempool.space REST API (injectable fetch, tolerant
+     parsers). The pure `evaluateAddressTxs` picks the most-confirmed qualifying
+     tx and `watchAddress` drives it to a paid/expired terminal state. Sats math
+     is shared with the Lightning rail via `wdk-checkout/sats`. No node URL is
+     hard-coded; nothing custodies funds. Unit-tested (BIP-21, evaluation, Esplora
+     client, polling).
+   - ✅ **WooCommerce gateway** — a `WDK_Pay_Bitcoin_Gateway` (id `wdk_pay_bitcoin`)
+     the merchant selects at checkout. It prices the total in sats, resolves a
+     receiving address (a fresh per-order BIP-84 address via the
+     `wdk_pay_bitcoin_order_address` filter is recommended; a static address is the
+     fallback), renders a BIP-21 QR + address, and polls
+     `GET /wdk-pay/v1/bitcoin/status/{orderKey}`; the server verifies on-chain via
+     an Esplora API (PHP mirror `class-wdk-pay-bitcoin-watcher.php` of the JS rail)
+     and calls `payment_complete()` once a confirmed payment of ≥ the order amount
+     lands. The customer pays from any Bitcoin wallet. `php -l` clean.
+   - Follow-up: a live BTC price feed (the gateway uses a configured rate today),
+     and HD-xpub address derivation inside the plugin (today via the filter seam).
 
 5. ✅ **x402 — charge bots/agents/crawlers** — an HTTP 402 facilitator
    (`wdk-checkout/x402`) verifies EIP-3009 "exact"-scheme payments off-chain

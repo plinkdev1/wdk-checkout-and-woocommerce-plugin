@@ -43,6 +43,13 @@ final class WDK_Pay {
 	private $lightning_rest;
 
 	/**
+	 * REST controller (on-chain Bitcoin).
+	 *
+	 * @var WDK_Pay_Bitcoin_REST
+	 */
+	private $bitcoin_rest;
+
+	/**
 	 * Retrieve (and lazily create) the singleton instance.
 	 *
 	 * @return WDK_Pay
@@ -61,6 +68,7 @@ final class WDK_Pay {
 	private function __construct() {
 		$this->rest           = new WDK_Pay_REST();
 		$this->lightning_rest = new WDK_Pay_Lightning_REST();
+		$this->bitcoin_rest   = new WDK_Pay_Bitcoin_REST();
 		$this->register_hooks();
 	}
 
@@ -73,9 +81,10 @@ final class WDK_Pay {
 		// Register the gateway with WooCommerce.
 		add_filter( 'woocommerce_payment_gateways', array( $this, 'register_gateway' ) );
 
-		// REST routes (on-chain + Lightning).
+		// REST routes (on-chain USDt + Lightning + on-chain Bitcoin).
 		add_action( 'rest_api_init', array( $this->rest, 'register_routes' ) );
 		add_action( 'rest_api_init', array( $this->lightning_rest, 'register_routes' ) );
+		add_action( 'rest_api_init', array( $this->bitcoin_rest, 'register_routes' ) );
 
 		// Internationalisation.
 		add_action( 'init', array( $this, 'load_textdomain' ) );
@@ -97,6 +106,7 @@ final class WDK_Pay {
 	public function register_gateway( $gateways ) {
 		$gateways[] = 'WDK_Pay_Gateway';
 		$gateways[] = 'WDK_Pay_Lightning_Gateway';
+		$gateways[] = 'WDK_Pay_Bitcoin_Gateway';
 
 		return $gateways;
 	}
@@ -154,6 +164,11 @@ final class WDK_Pay {
 		$lightning = $this->get_gateway_instance( 'wdk_pay_lightning' );
 		if ( $lightning instanceof WDK_Pay_Lightning_Gateway ) {
 			$lightning->maybe_render_admin_notice();
+		}
+
+		$bitcoin = $this->get_gateway_instance( 'wdk_pay_bitcoin' );
+		if ( $bitcoin instanceof WDK_Pay_Bitcoin_Gateway ) {
+			$bitcoin->maybe_render_admin_notice();
 		}
 	}
 
