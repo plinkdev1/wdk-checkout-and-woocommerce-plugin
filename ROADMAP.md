@@ -78,7 +78,13 @@
    behind a pluggable `SwapQuoteProvider` (wire Velora/0x/1inch; the WDK wallet
    bundles the Velora protocol for execution). After the swap the merchant still
    gets a plain USDt `Transfer`, so the existing on-chain verifier is unchanged.
-7. **Refunds & partial captures**; ✅ **subscriptions** (recurring EIP-3009 auths) —
+7. ✅ **Refunds & partial captures** — the gateway declares `refunds` support and
+   `process_refund` (full or partial) records the refund — the exact USD₮ transfer
+   back to the original payer — adds an order note, and fires a `payment.refunded`
+   webhook so the merchant's wallet/relayer settles it (self-custodial). A JS
+   `wdk-checkout/refunds` module (`buildRefund` + `refundTransferCalldata`,
+   unit-tested) produces the descriptor + ERC-20 calldata. Also: ✅ **subscriptions**
+   (recurring EIP-3009 auths) —
    done. A new `wdk-checkout/subscriptions` module models a subscription as a
    schedule of per-period EIP-3009 authorizations: each charge has its own
    time-boxed `validAfter`..`validBefore` window and a unique deterministic nonce,

@@ -35,7 +35,9 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 		$this->method_title       = __( 'WDK Pay (USDt)', 'wdk-pay' );
 		$this->method_description = __( 'Accept self-custodial USDt payments verified on-chain. Customers pay directly to your receiving address from a WDK-powered wallet.', 'wdk-pay' );
 		$this->has_fields         = false;
-		$this->supports           = array( 'products' );
+		// 'refunds' enables the WooCommerce refund UI; settlement is self-custodial
+		// (the merchant's wallet/relayer sends USDt back, triggered by the webhook).
+		$this->supports           = array( 'products', 'refunds' );
 
 		// Gateway icon shown next to the method at checkout: the WDK badge.
 		$this->icon = apply_filters( 'wdk_pay_gateway_icon', WDK_PAY_PLUGIN_URL . 'assets/img/wdk-pay-icon.png' );
@@ -839,6 +841,70 @@ JS;
 			'result'   => 'success',
 			'redirect' => $order->get_checkout_payment_url( true ),
 		);
+	}
+
+	/**
+	 * Process a (full or partial) refund.
+	 *
+	 * Self-custodial: the plugin holds no keys, so it records the refund — the
+	 * exact USD₮ `transfer` back to the original payer — and fires a
+	 * `payment.refunded` webhook so the merchant's wallet/relayer settles it
+	 * on-chain. An order note captures the recipient + amount for a manual send.
+	 *
+	 * @param int        $order_id Order id.
+	 * @param float|null $amount   Refund amount in store currency (null = full).
+	 * @param string     $reason   Optional reason.
+	 * @return bool|WP_Error True when recorded, WP_Error otherwise.
+	 */
+	public function process_refund( $order_id, $amount = null, $reason = '' ) {
+		$order = wc_get_order( $order_id );
+		if ( ! $order instanceof WC_Order ) {
+			return new WP_Error( 'wdk_refund', __( 'Order not found.', 'wdk-pay' ) );
+		}
+
+		$payer = WDK_Pay_Verifier::normalize_address( (string) $order->get_meta( WDK_Pay_REST::META_FROM ) );
+		if ( '' === $payer ) {
+			return new WP_Error(
+				'wdk_refund',
+				__( 'No payer address on record for this order, so the refund recipient is unknown. Refund manually.', 'wdk-pay' )
+			);
+		}
+
+		$settings = $this->get_resolved_settings();
+		$asset    = WDK_Pay_Chains::asset( $settings['chain'], $settings['asset'] );
+		$decimals = ( $asset && isset( $asset['decimals'] ) ) ? (int) $asset['decimals'] : WDK_Pay_Intent::DECIMALS;
+		$amount   = ( null === $amount ) ? (float) $order->get_total() : (float) $amount;
+		if ( $amount <= 0 ) {
+			return new WP_Error( 'wdk_refund', __( 'Refund amount must be greater than zero.', 'wdk-pay' ) );
+		}
+		$amount_base = WDK_Pay_Intent::to_base_units( (string) $amount, $decimals );
+
+		$order->add_order_note(
+			sprintf(
+				/* translators: 1: amount, 2: asset symbol, 3: payer address, 4: token address, 5: chain. */
+				__( 'WDK Pay refund recorded: send %1$s %2$s to %3$s (token %4$s on %5$s). Settlement is self-custodial.', 'wdk-pay' ),
+				rtrim( rtrim( number_format( $amount, $decimals, '.', '' ), '0' ), '.' ),
+				strtoupper( (string) $settings['asset'] ),
+				$payer,
+				(string) $settings['token_address'],
+				(string) $settings['chain']
+			)
+		);
+
+		WDK_Pay_Webhook::fire(
+			$order,
+			'payment.refunded',
+			array(
+				'status'     => 'refunded',
+				'to'         => $payer,
+				'amountBase' => (string) $amount_base,
+				'token'      => (string) $settings['token_address'],
+				'chainId'    => WDK_Pay_Chains::chain_id_for( $settings['chain'] ),
+				'reason'     => (string) $reason,
+			)
+		);
+
+		return true;
 	}
 
 	/**
