@@ -63,6 +63,10 @@
       "types": "./dist/bitcoin.d.ts",
       "default": "./dist/bitcoin.js"
     },
+    "./verify": {
+      "types": "./dist/verify.d.ts",
+      "default": "./dist/verify.js"
+    },
     "./sats": {
       "types": "./dist/sats.d.ts",
       "default": "./dist/sats.js"
