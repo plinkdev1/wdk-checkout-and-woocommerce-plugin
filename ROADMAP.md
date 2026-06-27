@@ -140,9 +140,11 @@ theming standard we set on the WDK wallet template + extension.
 16. **Live preview in admin.** Render the themed widget live in the WooCommerce
     settings page as the merchant edits colors / logo / fonts (today they save,
     then check the order-pay screen).
-17. **Localization (i18n).** Widget strings ("Pay with wallet", "Amount due",
-    status messages, countdown) are hard-coded English. Add a `strings` override
-    map + ship locale packs so the checkout speaks the storefront's language.
+17. ✅ **Localization (i18n).** Every user-facing widget string (tabs, pay/confirm
+    buttons, manual-entry labels, status messages, countdown, footer) now routes
+    through a `CheckoutStrings` contract. Pass `strings` (a partial or a full locale
+    pack) on `WdkPayConfig`; `resolveCheckoutStrings()` (exported, unit-tested)
+    layers it over the English defaults. No more hard-coded copy.
 18. **Accessibility pass.** Dialog ARIA roles, focus trap + restore, keyboard
     navigation, and contrast-checked default palettes — so the drop-in is
     WCAG-friendly out of the box.

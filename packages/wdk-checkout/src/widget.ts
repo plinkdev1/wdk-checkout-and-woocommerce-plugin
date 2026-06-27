@@ -1,5 +1,5 @@
-import type { CheckoutBrand, CheckoutTheme, PaymentIntent, PaymentStatus, WdkPayConfig } from './types.js'
-import { resolveCheckoutTheme } from './types.js'
+import type { CheckoutBrand, CheckoutStrings, CheckoutTheme, PaymentIntent, PaymentStatus, WdkPayConfig } from './types.js'
+import { resolveCheckoutTheme, resolveCheckoutStrings } from './types.js'
 import { payIntent } from './usdt.js'
 import { qrDataUrl } from './qr.js'
 import { fiatDisplayLine } from './pricing.js'
@@ -23,33 +23,34 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
     ? window.matchMedia('(prefers-color-scheme: dark)').matches
     : false
   const theme: CheckoutTheme = resolveCheckoutTheme({ preset: config.preset, mode: config.mode, theme: config.theme }, prefersDark)
+  const strings = resolveCheckoutStrings(config.strings)
 
   root.innerHTML = ''
-  const el = buildDom(intent, theme, config.brand)
+  const el = buildDom(intent, theme, strings, config.brand)
   root.appendChild(el.container)
 
   function setStatus (next: PaymentStatus, message?: string) {
     status = next
-    renderStatus(el, status, message, config)
+    renderStatus(el, status, message, strings)
     el.payBtn.disabled = next === 'connecting' || next === 'awaiting-signature' || next === 'submitted' || next === 'confirming' || next === 'confirmed'
     el.confirmBtn.disabled = el.payBtn.disabled
   }
 
   async function confirmHash (txHash: string, from?: string) {
-    setStatus('confirming', 'Verifying your payment on-chain…')
+    setStatus('confirming', strings.verifyingOnChain)
     const ok = await postConfirm(config, txHash, from)
     if (ok === 'confirmed') {
-      redirectTimer = finishConfirmed(el, config)
+      redirectTimer = finishConfirmed(el, config, strings)
       setStatus('confirmed')
       stopTimers()
     } else if (ok === 'failed') {
-      setStatus('failed', 'We could not verify that transaction. Check the hash, amount, and recipient and try again.')
+      setStatus('failed', strings.couldNotVerify)
     } else {
       // pending → keep polling the same hash until confirmed/failed
       if (!pollTimer) {
         pollTimer = setInterval(async () => {
           const s = await postConfirm(config, txHash, from)
-          if (s === 'confirmed') { redirectTimer = finishConfirmed(el, config); setStatus('confirmed'); stopTimers() } else if (s === 'failed') { setStatus('failed', 'Verification failed.'); stopTimers() }
+          if (s === 'confirmed') { redirectTimer = finishConfirmed(el, config, strings); setStatus('confirmed'); stopTimers() } else if (s === 'failed') { setStatus('failed', strings.verificationFailed); stopTimers() }
         }, 5000)
       }
     }
@@ -57,19 +58,19 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
 
   el.payBtn.addEventListener('click', async () => {
     try {
-      setStatus('connecting', 'Connecting your wallet…')
-      setStatus('awaiting-signature', 'Confirm the payment in your wallet…')
+      setStatus('connecting', strings.connectingWallet)
+      setStatus('awaiting-signature', strings.confirmInWalletLong)
       const txHash = await payIntent(intent)
-      setStatus('submitted', 'Payment submitted. Waiting for confirmation…')
+      setStatus('submitted', strings.submittedWaiting)
       await confirmHash(txHash)
     } catch (err) {
-      setStatus('failed', err instanceof Error ? err.message : 'Payment failed.')
+      setStatus('failed', err instanceof Error ? err.message : strings.paymentFailed)
     }
   })
 
   el.confirmBtn.addEventListener('click', async () => {
     const txHash = el.hashInput.value.trim()
-    if (!TX_RE.test(txHash)) { setStatus('failed', 'Enter a valid transaction hash (0x…64 hex chars).'); return }
+    if (!TX_RE.test(txHash)) { setStatus('failed', strings.invalidHash); return }
     await confirmHash(txHash)
   })
 
@@ -80,10 +81,10 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
   function tickCountdown () {
     const remaining = intent.expiresAt * 1000 - Date.now()
     if (remaining > 0) {
-      el.countdown.textContent = `Payment window: ${formatRemaining(remaining)}`
+      el.countdown.textContent = `${strings.paymentWindow} ${formatRemaining(remaining)}`
       return
     }
-    el.countdown.textContent = 'Payment window expired — refresh to retry.'
+    el.countdown.textContent = strings.paymentWindowExpired
     // Stop ticking and block paying into a stale intent — but never yank the UI
     // out from under a payment that's already in flight or confirmed.
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = undefined }
@@ -100,7 +101,7 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = undefined }
   }
 
-  if (status === 'confirmed') { redirectTimer = finishConfirmed(el, config); setStatus('confirmed') }
+  if (status === 'confirmed') { redirectTimer = finishConfirmed(el, config, strings); setStatus('confirmed') }
 
   return () => { stopTimers(); if (redirectTimer) clearTimeout(redirectTimer); root.innerHTML = '' }
 }
@@ -116,7 +117,7 @@ interface Dom {
   tabs: { wallet: HTMLButtonElement, manual: HTMLButtonElement }
 }
 
-function buildDom (intent: PaymentIntent, theme: CheckoutTheme, brand?: CheckoutBrand): Dom {
+function buildDom (intent: PaymentIntent, theme: CheckoutTheme, strings: CheckoutStrings, brand?: CheckoutBrand): Dom {
   const container = div({ maxWidth: '420px', margin: '0 auto', fontFamily: 'var(--wp-font)', color: 'var(--wp-text)' })
   // Inject the palette as CSS variables; they cascade to every child element
   // (including the helper-built buttons/inputs), so a merchant can re-skin the
@@ -184,16 +185,16 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, brand?: Checkout
   container.appendChild(amountCard)
 
   const tabBar = div({ display: 'flex', gap: '6px', marginBottom: '14px' })
-  const walletTab = tabButton('Pay with wallet', true)
-  const manualTab = tabButton('Pay manually', false)
+  const walletTab = tabButton(strings.payWithWallet, true)
+  const manualTab = tabButton(strings.payManually, false)
   tabBar.append(walletTab, manualTab)
   container.appendChild(tabBar)
 
   // Wallet panel
   const walletPanel = div({})
-  const payBtn = button(`Pay ${esc(intent.amount)} ${esc(intent.tokenSymbol)}`)
+  const payBtn = button(`${esc(strings.pay)} ${esc(intent.amount)} ${esc(intent.tokenSymbol)}`)
   walletPanel.appendChild(payBtn)
-  const hint = p('Pay directly from a WDK-powered or any EVM wallet. You stay in custody of your funds the entire time.')
+  const hint = p(strings.walletHint)
   walletPanel.appendChild(hint)
 
   // Manual panel
@@ -203,15 +204,15 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, brand?: Checkout
   qr.alt = 'Receiving address QR'
   Object.assign(qr.style, { width: '180px', height: '180px', display: 'block', margin: '0 auto 12px', borderRadius: '10px' })
   manualPanel.appendChild(qr)
-  manualPanel.appendChild(labeled('Send exactly', `${esc(intent.amount)} ${esc(intent.tokenSymbol)} (${esc(intent.chainName)})`))
-  manualPanel.appendChild(labeled('To address', `<code style="word-break:break-all;font-size:12px">${esc(intent.receivingAddress)}</code>`))
-  const hashLabel = p('Already paid from another wallet? Paste your transaction hash to confirm:')
+  manualPanel.appendChild(labeled(strings.sendExactly, `${esc(intent.amount)} ${esc(intent.tokenSymbol)} (${esc(intent.chainName)})`))
+  manualPanel.appendChild(labeled(strings.toAddress, `<code style="word-break:break-all;font-size:12px">${esc(intent.receivingAddress)}</code>`))
+  const hashLabel = p(strings.alreadyPaid)
   manualPanel.appendChild(hashLabel)
   const hashInput = document.createElement('input')
   hashInput.placeholder = '0x…'
   Object.assign(hashInput.style, { width: '100%', padding: '10px 12px', borderRadius: 'var(--wp-input-radius)', border: '1px solid var(--wp-border)', fontSize: '13px', boxSizing: 'border-box', marginBottom: '8px' })
   manualPanel.appendChild(hashInput)
-  const confirmBtn = button('Confirm payment')
+  const confirmBtn = button(strings.confirmPayment)
   manualPanel.appendChild(confirmBtn)
 
   container.append(walletPanel, manualPanel)
@@ -223,7 +224,7 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, brand?: Checkout
   container.appendChild(countdown)
 
   const footer = div({ marginTop: '12px', fontSize: '11px', color: 'var(--wp-text-faint)', textAlign: 'center' })
-  footer.textContent = 'Secured by WDK · self-custodial · on-chain verified'
+  footer.textContent = strings.securedBy
   container.appendChild(footer)
 
   return {
@@ -246,23 +247,22 @@ function switchTab (el: Dom, tab: 'wallet' | 'manual') {
   el.tabs.manual.style.opacity = isWallet ? '.55' : '1'
 }
 
-function renderStatus (el: Dom, status: PaymentStatus, message: string | undefined, config: WdkPayConfig) {
+function renderStatus (el: Dom, status: PaymentStatus, message: string | undefined, strings: CheckoutStrings) {
   const map: Record<PaymentStatus, { color: string, label: string }> = {
     idle: { color: 'var(--wp-text-muted)', label: '' },
-    connecting: { color: 'var(--wp-info)', label: 'Connecting…' },
-    'awaiting-signature': { color: 'var(--wp-info)', label: 'Confirm in your wallet…' },
-    submitted: { color: 'var(--wp-info)', label: 'Submitted…' },
-    confirming: { color: 'var(--wp-accent)', label: 'Verifying…' },
-    confirmed: { color: 'var(--wp-success)', label: 'Payment confirmed ✓' },
-    failed: { color: 'var(--wp-error)', label: 'Payment failed' }
+    connecting: { color: 'var(--wp-info)', label: strings.statusConnecting },
+    'awaiting-signature': { color: 'var(--wp-info)', label: strings.statusAwaitingSignature },
+    submitted: { color: 'var(--wp-info)', label: strings.statusSubmitted },
+    confirming: { color: 'var(--wp-accent)', label: strings.statusConfirming },
+    confirmed: { color: 'var(--wp-success)', label: strings.statusConfirmed },
+    failed: { color: 'var(--wp-error)', label: strings.statusFailed }
   }
   const s = map[status]
   el.statusBox.innerHTML = message || s.label ? `<span style="color:${s.color}">${esc(message || s.label)}</span>` : ''
-  void config
 }
 
-function finishConfirmed (el: Dom, config: WdkPayConfig): ReturnType<typeof setTimeout> {
-  el.statusBox.innerHTML = '<span style="color:var(--wp-success);font-weight:600">Payment confirmed ✓ — redirecting…</span>'
+function finishConfirmed (el: Dom, config: WdkPayConfig, strings: CheckoutStrings): ReturnType<typeof setTimeout> {
+  el.statusBox.innerHTML = `<span style="color:var(--wp-success);font-weight:600">${esc(strings.confirmedRedirecting)}</span>`
   return setTimeout(() => { window.location.href = config.returnUrl }, 1500)
 }
 

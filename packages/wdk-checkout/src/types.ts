@@ -86,6 +86,102 @@ export interface CheckoutTheme {
   headingFontFamily?: string
 }
 
+/**
+ * User-facing widget strings. Every key is optional via
+ * `WdkPayConfig.strings` — unspecified keys fall back to
+ * {@link DEFAULT_CHECKOUT_STRINGS} (English). Ship locale packs by passing a
+ * full map. Amount/symbol/chain are interpolated by the widget, not stored here.
+ */
+export interface CheckoutStrings {
+  /** Tab: pay with a connected wallet. */
+  payWithWallet: string
+  /** Tab: pay manually (QR + confirm by hash). */
+  payManually: string
+  /** Primary pay-button prefix (`{prefix} 19.99 USDt`). */
+  pay: string
+  /** Wallet-tab hint under the pay button. */
+  walletHint: string
+  /** Manual: "Send exactly" label. */
+  sendExactly: string
+  /** Manual: "To address" label. */
+  toAddress: string
+  /** Manual: paste-hash prompt. */
+  alreadyPaid: string
+  /** Manual: confirm-by-hash button. */
+  confirmPayment: string
+  /** Footer line. */
+  securedBy: string
+  /** Countdown prefix (`{prefix} 04:59`). */
+  paymentWindow: string
+  /** Countdown when the window has elapsed. */
+  paymentWindowExpired: string
+  /** Flow message: connecting the wallet. */
+  connectingWallet: string
+  /** Flow message: awaiting the in-wallet signature. */
+  confirmInWalletLong: string
+  /** Flow message: tx submitted, awaiting confirmation. */
+  submittedWaiting: string
+  /** Flow message: generic failure fallback. */
+  paymentFailed: string
+  /** Status pill: connecting. */
+  statusConnecting: string
+  /** Status pill: awaiting signature. */
+  statusAwaitingSignature: string
+  /** Status pill: submitted. */
+  statusSubmitted: string
+  /** Status pill: verifying on-chain. */
+  statusConfirming: string
+  /** Status pill: confirmed. */
+  statusConfirmed: string
+  /** Status pill: failed. */
+  statusFailed: string
+  /** Terminal message shown before redirecting. */
+  confirmedRedirecting: string
+  /** Flow message: verifying the pasted/submitted hash on-chain. */
+  verifyingOnChain: string
+  /** Flow message: verification of a hash did not match. */
+  couldNotVerify: string
+  /** Flow message: short verification-failed (poll path). */
+  verificationFailed: string
+  /** Validation: the pasted hash is malformed. */
+  invalidHash: string
+}
+
+/** Default (English) widget strings. Override any subset via `WdkPayConfig.strings`. */
+export const DEFAULT_CHECKOUT_STRINGS: CheckoutStrings = {
+  payWithWallet: 'Pay with wallet',
+  payManually: 'Pay manually',
+  pay: 'Pay',
+  walletHint: 'Pay directly from a WDK-powered or any EVM wallet. You stay in custody of your funds the entire time.',
+  sendExactly: 'Send exactly',
+  toAddress: 'To address',
+  alreadyPaid: 'Already paid from another wallet? Paste your transaction hash to confirm:',
+  confirmPayment: 'Confirm payment',
+  securedBy: 'Secured by WDK · self-custodial · on-chain verified',
+  paymentWindow: 'Payment window:',
+  paymentWindowExpired: 'Payment window expired — refresh to retry.',
+  connectingWallet: 'Connecting your wallet…',
+  confirmInWalletLong: 'Confirm the payment in your wallet…',
+  submittedWaiting: 'Payment submitted. Waiting for confirmation…',
+  paymentFailed: 'Payment failed.',
+  statusConnecting: 'Connecting…',
+  statusAwaitingSignature: 'Confirm in your wallet…',
+  statusSubmitted: 'Submitted…',
+  statusConfirming: 'Verifying…',
+  statusConfirmed: 'Payment confirmed ✓',
+  statusFailed: 'Payment failed',
+  confirmedRedirecting: 'Payment confirmed ✓ — redirecting…',
+  verifyingOnChain: 'Verifying your payment on-chain…',
+  couldNotVerify: 'We could not verify that transaction. Check the hash, amount, and recipient and try again.',
+  verificationFailed: 'Verification failed.',
+  invalidHash: 'Enter a valid transaction hash (0x…64 hex chars).',
+}
+
+/** Merge a partial string override over the English defaults. */
+export function resolveCheckoutStrings (partial?: Partial<CheckoutStrings>): CheckoutStrings {
+  return { ...DEFAULT_CHECKOUT_STRINGS, ...(partial ?? {}) }
+}
+
 /** Optional merchant brand shown atop the widget (logo + store name) — white-label. */
 export interface CheckoutBrand {
   /** Store / brand name shown next to the logo. */
@@ -239,6 +335,8 @@ export interface WdkPayConfig {
   readonly theme?: Partial<CheckoutTheme>
   /** Optional merchant brand (logo + store name) rendered atop the widget. */
   readonly brand?: CheckoutBrand
+  /** Optional UI-string overrides / locale pack (layered over the English defaults). */
+  readonly strings?: Partial<CheckoutStrings>
 }
 
 /** Minimal EIP-1193 provider shape (e.g. `window.ethereum`). */
