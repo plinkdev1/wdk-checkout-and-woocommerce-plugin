@@ -96,8 +96,14 @@
 
 ## ⏳ Phase 4 — Platform breadth
 
-8. **More platforms** — Shopify app, Magento, and a generic REST/webhook core so
-   the same verification engine backs any storefront.
+8. ✅ **Generic REST/webhook core** (so the same engine backs any storefront) —
+   the `@wdk-starter/wdk-checkout` package is framework-free by design: intents,
+   pricing, on-ramp, signed webhooks, refunds, Lightning, the `<wdk-pay>` Web
+   Component + one-tag auto-mount. `examples/merchant-server.mjs` is a
+   dependency-free Node server (GET `/intent`, POST `/webhook` with signature
+   verification) proving a non-WooCommerce backend wires up the same way.
+   *(⏳ Shopify app + Magento extension are platform-specific products built on
+   this core — separate follow-ups.)*
 9. ✅ **Fiat on-ramp at checkout** (`@tetherto/wdk-protocol-fiat-moonpay`) — a
    pluggable `wdk-checkout/onramp` module (`buildOnrampUrl`, unit-tested) builds a
    buy-crypto URL (MoonPay default, any provider via `baseUrl`, server-signing seam
