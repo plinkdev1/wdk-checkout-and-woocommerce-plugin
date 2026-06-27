@@ -120,18 +120,20 @@ theming standard we set on the WDK wallet template + extension.
     Google-Fonts name / `@font-face`), a separate heading font, and a weight/size
     scale, so the checkout actually *renders* the storefront's brand font instead
     of only requesting it if already installed.
-13. **Shape & edges — per-element radii + button styles.** One global `radius`
-    drives every corner today. Split into `cardRadius`, `buttonRadius`,
-    `inputRadius` (so **button edges** are independently roundable → square /
-    rounded / pill), add a button **style** token (solid / outline / soft) and an
-    optional gradient accent. Mirrors the wallets' per-surface edge tokens.
-14. **Theme presets + light/dark mode.** Ship named presets — the palettes we
-    standardized on the wallets (warm dark + orange, cool dark, institutional
-    light) — selectable by **one key**, plus a `mode: 'light' | 'dark'` dimension
-    and `prefers-color-scheme` auto-detect. A merchant picks
-    `theme: 'institutional-light'` instead of hand-tuning 13 colors. Define a
-    **shared theme contract** so the same preset names mean the same thing across
-    WDK Pay and the wallet UI (`@wdk-starter/wdk-ui`).
+13. ✅ **Shape & edges — per-element radii + button styles.** `CheckoutTheme` gained
+    `cardRadius` / `buttonRadius` / `inputRadius` (each falls back to the global
+    `radius`, so button edges are independently square / rounded / pill) plus a
+    `buttonStyle` token (`solid` / `outline` / `soft`). The widget emits them as
+    `--wp-card-radius` / `--wp-button-radius` / `--wp-input-radius` +
+    `--wp-button-{bg,fg,border}` and the card/inputs/buttons consume them (no more
+    hard-coded corners). *(Follow-up: optional gradient accent.)*
+14. ✅ **Theme presets + light/dark mode.** Four named presets — `wdk` (default),
+    `dark` (warm dark), `cool-dark`, `institutional-light` — selectable by one key
+    (`preset`), plus a `mode: 'light' | 'dark' | 'auto'` dimension where `auto`
+    follows `prefers-color-scheme`. `resolveCheckoutTheme()` (exported, unit-tested)
+    picks the base then layers the `theme` partial. The preset names are the
+    **shared contract** with the wallet UI. *(Follow-up: surface the picker in the
+    WooCommerce admin — see #16 live preview.)*
 15. **Custom-CSS escape hatch + class hooks.** Stable `data-wdk-*` / className
     hooks on every element plus an optional `customCss` string, for merchants who
     want pixel control beyond the token set.

@@ -1,5 +1,5 @@
 import type { CheckoutBrand, CheckoutTheme, PaymentIntent, PaymentStatus, WdkPayConfig } from './types.js'
-import { DEFAULT_CHECKOUT_THEME } from './types.js'
+import { resolveCheckoutTheme } from './types.js'
 import { payIntent } from './usdt.js'
 import { qrDataUrl } from './qr.js'
 import { fiatDisplayLine } from './pricing.js'
@@ -19,7 +19,10 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
   let countdownTimer: ReturnType<typeof setInterval> | undefined
   let redirectTimer: ReturnType<typeof setTimeout> | undefined
 
-  const theme: CheckoutTheme = { ...DEFAULT_CHECKOUT_THEME, ...config.theme }
+  const prefersDark = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(prefers-color-scheme: dark)').matches
+    : false
+  const theme: CheckoutTheme = resolveCheckoutTheme({ preset: config.preset, mode: config.mode, theme: config.theme }, prefersDark)
 
   root.innerHTML = ''
   const el = buildDom(intent, theme, config.brand)
@@ -118,12 +121,26 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, brand?: Checkout
   // Inject the palette as CSS variables; they cascade to every child element
   // (including the helper-built buttons/inputs), so a merchant can re-skin the
   // whole widget by passing `theme` to mountCheckout().
+  // Per-element radii fall back to the global radius; the button style maps to a
+  // background/foreground/border triple the helper-built buttons consume by var.
+  const cardRadius = theme.cardRadius ?? theme.radius
+  const buttonRadius = theme.buttonRadius ?? theme.radius
+  const inputRadius = theme.inputRadius ?? theme.radius
+  const buttonStyle = theme.buttonStyle ?? 'solid'
+  const buttonSkin = buttonStyle === 'outline'
+    ? { bg: 'transparent', fg: 'var(--wp-accent)', border: '1px solid var(--wp-accent)' }
+    : buttonStyle === 'soft'
+      ? { bg: 'color-mix(in srgb, var(--wp-accent) 16%, transparent)', fg: 'var(--wp-accent)', border: 'none' }
+      : { bg: 'var(--wp-accent)', fg: 'var(--wp-accent-text)', border: 'none' }
+
   const vars: Record<string, string> = {
     '--wp-surface': theme.surface, '--wp-on-surface': theme.onSurface, '--wp-text': theme.text,
     '--wp-text-muted': theme.textMuted, '--wp-text-faint': theme.textFaint, '--wp-accent': theme.accent,
     '--wp-accent-text': theme.accentText, '--wp-border': theme.border, '--wp-info': theme.info,
     '--wp-success': theme.success, '--wp-error': theme.error, '--wp-radius': theme.radius, '--wp-font': theme.fontFamily,
     '--wp-heading-font': theme.headingFontFamily ?? theme.fontFamily,
+    '--wp-card-radius': cardRadius, '--wp-button-radius': buttonRadius, '--wp-input-radius': inputRadius,
+    '--wp-button-bg': buttonSkin.bg, '--wp-button-fg': buttonSkin.fg, '--wp-button-border': buttonSkin.border,
   }
   for (const [k, val] of Object.entries(vars)) container.style.setProperty(k, val)
 
@@ -146,7 +163,7 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, brand?: Checkout
     container.appendChild(header)
   }
 
-  const amountCard = div({ background: 'var(--wp-surface)', color: 'var(--wp-on-surface)', borderRadius: 'var(--wp-radius)', padding: '20px', textAlign: 'center', marginBottom: '16px' })
+  const amountCard = div({ background: 'var(--wp-surface)', color: 'var(--wp-on-surface)', borderRadius: 'var(--wp-card-radius)', padding: '20px', textAlign: 'center', marginBottom: '16px' })
   // Familiar fiat price (e.g. "$19.99"), shown above the on-chain amount when
   // the intent carries a store-currency total. The token amount is what settles.
   const fiat = fiatDisplayLine(intent)
@@ -192,7 +209,7 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, brand?: Checkout
   manualPanel.appendChild(hashLabel)
   const hashInput = document.createElement('input')
   hashInput.placeholder = '0x…'
-  Object.assign(hashInput.style, { width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--wp-border)', fontSize: '13px', boxSizing: 'border-box', marginBottom: '8px' })
+  Object.assign(hashInput.style, { width: '100%', padding: '10px 12px', borderRadius: 'var(--wp-input-radius)', border: '1px solid var(--wp-border)', fontSize: '13px', boxSizing: 'border-box', marginBottom: '8px' })
   manualPanel.appendChild(hashInput)
   const confirmBtn = button('Confirm payment')
   manualPanel.appendChild(confirmBtn)
@@ -281,13 +298,13 @@ function p (text: string): HTMLElement {
 function button (label: string): HTMLButtonElement {
   const b = document.createElement('button')
   b.innerHTML = label
-  Object.assign(b.style, { width: '100%', padding: '13px', borderRadius: '10px', border: 'none', background: 'var(--wp-accent)', color: 'var(--wp-accent-text)', fontSize: '15px', fontWeight: '600', cursor: 'pointer' })
+  Object.assign(b.style, { width: '100%', padding: '13px', borderRadius: 'var(--wp-button-radius)', border: 'var(--wp-button-border)', background: 'var(--wp-button-bg)', color: 'var(--wp-button-fg)', fontSize: '15px', fontWeight: '600', cursor: 'pointer' })
   return b
 }
 function tabButton (label: string, active: boolean): HTMLButtonElement {
   const b = document.createElement('button')
   b.textContent = label
-  Object.assign(b.style, { flex: '1', padding: '8px', borderRadius: '8px', border: '1px solid var(--wp-border)', background: 'transparent', fontSize: '13px', cursor: 'pointer', color: 'inherit', opacity: active ? '1' : '.55' })
+  Object.assign(b.style, { flex: '1', padding: '8px', borderRadius: 'var(--wp-input-radius)', border: '1px solid var(--wp-border)', background: 'transparent', fontSize: '13px', cursor: 'pointer', color: 'inherit', opacity: active ? '1' : '.55' })
   return b
 }
 function labeled (label: string, valueHtml: string): HTMLElement {
