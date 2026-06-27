@@ -144,7 +144,15 @@
      `paymentSessionReject` through the Payments Apps API. Funds settle straight to
      the merchant; Shopify only learns the outcome. Tested (HMAC auth + the API
      client with a mocked fetch).
-   - 🚧 **Magento extension** — a Magento 2 payment module on the same core (next).
+   - ✅ **Magento extension** (`magento-module/WDK_Pay/`) — a Magento 2 payment
+     module on the same core: a checkout method that places the order, sends the
+     buyer to a hosted pay page mounting the WDK Pay widget, and a `Confirm`
+     controller that authenticates with the order's protect code, checks the
+     reported `chainId` strictly against the configured chain, verifies the
+     on-chain `Transfer` (`Model\Verifier`, rule-for-rule with the WooCommerce +
+     `wdk-checkout/verify` verifiers), and invoices the order. Admin settings,
+     chain registry, and base-unit math mirror the WooCommerce plugin. All PHP
+     passes `php -l`; all XML is well-formed.
 9. ✅ **Fiat on-ramp at checkout** (`@tetherto/wdk-protocol-fiat-moonpay`) — a
    pluggable `wdk-checkout/onramp` module (`buildOnrampUrl`, unit-tested) builds a
    buy-crypto URL (MoonPay default, any provider via `baseUrl`, server-signing seam

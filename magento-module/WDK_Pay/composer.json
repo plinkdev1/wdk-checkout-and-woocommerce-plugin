@@ -1,0 +1,19 @@
+{
+  "name": "wdk/module-pay",
+  "description": "WDK Pay — accept self-custodial USDt on Magento 2, verified on-chain. Powered by @wdk-starter/wdk-checkout.",
+  "type": "magento2-module",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.1",
+    "magento/framework": "*",
+    "magento/module-payment": "*",
+    "magento/module-sales": "*",
+    "magento/module-checkout": "*"
+  },
+  "autoload": {
+    "files": ["registration.php"],
+    "psr-4": {
+      "WDK\\Pay\\": ""
+    }
+  }
+}

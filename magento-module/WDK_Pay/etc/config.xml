@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  Default configuration for the WDK Pay payment method.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <payment>
+            <wdk_pay>
+                <active>0</active>
+                <model>WdkPayFacade</model>
+                <title>Pay with USDt</title>
+                <order_status>pending_payment</order_status>
+                <payment_action>order</payment_action>
+                <can_initialize>1</can_initialize>
+                <can_use_internal>0</can_use_internal>
+                <chain>ethereum</chain>
+                <asset>usdt</asset>
+                <confirmations>1</confirmations>
+                <payment_window>30</payment_window>
+            </wdk_pay>
+        </payment>
+    </default>
+</config>

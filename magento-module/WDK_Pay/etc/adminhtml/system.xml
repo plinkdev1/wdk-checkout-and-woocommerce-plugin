@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+  Admin settings for WDK Pay (Stores → Configuration → Sales → Payment Methods).
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="payment">
+            <group id="wdk_pay" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>WDK Pay (USDt)</label>
+                <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="title" translate="label" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Title</label>
+                </field>
+                <field id="receiving_address" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Merchant receiving address</label>
+                    <comment>The 0x address that receives USDt payments. Required.</comment>
+                </field>
+                <field id="chain" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Settlement chain</label>
+                    <source_model>WDK\Pay\Model\Config\Source\Chain</source_model>
+                </field>
+                <field id="asset" translate="label" type="select" sortOrder="25" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Accepted asset</label>
+                    <source_model>WDK\Pay\Model\Config\Source\Asset</source_model>
+                </field>
+                <field id="token_address" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Token address (override)</label>
+                    <comment>Optional. Override the contract address for the selected chain/asset.</comment>
+                </field>
+                <field id="rpc_url" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>RPC URL</label>
+                    <comment>JSON-RPC endpoint used to verify payments on-chain. Required.</comment>
+                </field>
+                <field id="confirmations" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Required confirmations</label>
+                </field>
+                <field id="payment_window" translate="label" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>Payment window (minutes)</label>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

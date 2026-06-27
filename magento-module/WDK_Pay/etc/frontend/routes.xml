@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--
+  Frontend route: /wdkpay/... (the hosted pay page + the on-chain confirm endpoint).
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+    <router id="standard">
+        <route id="wdkpay" frontName="wdkpay">
+            <module name="WDK_Pay"/>
+        </route>
+    </router>
+</config>

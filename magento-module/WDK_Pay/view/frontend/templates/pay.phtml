@@ -1,0 +1,20 @@
+<?php
+/**
+ * Hosted pay page — mounts the WDK Pay checkout widget for the placed order.
+ *
+ * @var \WDK\Pay\Block\Pay $block
+ */
+$config = $block->getWidgetConfigJson();
+?>
+<?php if ($config === ''): ?>
+    <p style="max-width:460px;margin:24px auto;text-align:center;">
+        <?= $block->escapeHtml(__('USDt payments are temporarily unavailable. Please contact the store.')) ?>
+    </p>
+<?php else: ?>
+    <div style="max-width:460px;margin:24px auto;padding:0 16px;">
+        <div id="wdk-pay-root" data-wdk-pay="1"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
+    <script>window.WDK_PAY = <?= /* @noEscape */ $config ?>;</script>
+    <script src="<?= $block->escapeUrl($block->getWidgetBundleUrl()) ?>"></script>
+<?php endif; ?>

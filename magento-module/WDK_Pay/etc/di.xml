@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+  Wire the WDK Pay method through Magento's payment Adapter (the standard
+  facade for a custom method): code + a default value handler reading config.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <virtualType name="WdkPayFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">WDK\Pay\Model\PaymentMethod::CODE</argument>
+            <argument name="valueHandlerPool" xsi:type="object">WdkPayValueHandlerPool</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\Info</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="WdkPayValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">WdkPayValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="WdkPayValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">WdkPayConfig</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="WdkPayConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">WDK\Pay\Model\PaymentMethod::CODE</argument>
+        </arguments>
+    </virtualType>
+</config>
