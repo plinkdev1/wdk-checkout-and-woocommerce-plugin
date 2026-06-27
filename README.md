@@ -66,6 +66,15 @@ For customers with no native gas token, the checkout can use **EIP-3009 `transfe
 |:--:|:--:|:--:|
 | ![Checkout overview](./media/screenshots/01-checkout-overview.png) | ![Pay with wallet](./media/screenshots/02-pay-with-wallet.png) | ![Pay manually](./media/screenshots/03-pay-manually-qr.png) |
 
+**Multiple rails, real token logos.** The widget renders the genuine asset marks
+(the real Tether ₮, Bitcoin ₿, Ethereum diamond) — embedded, so they always show
+correctly — and the same package powers an on-chain **Bitcoin** gateway (BIP-21 QR,
+verified via Esplora) alongside USDt and Lightning.
+
+| USDt checkout (live widget) | Bitcoin on-chain checkout | Embedded token marks |
+|:--:|:--:|:--:|
+| ![USDt checkout with the real Tether mark](./media/screenshots/checkout-usdt.png) | ![Bitcoin on-chain checkout — BIP-21 QR](./media/screenshots/checkout-bitcoin.png) | ![Real USD₮ / Tether Gold / BTC / ETH marks](./media/screenshots/token-marks.png) |
+
 **▶ Demo video** — a real screen recording of the running widget (storefront → amount card with the live token icon → wallet tab → manual QR + address + tx-hash):
 
 <video src="https://github.com/plinkdev1/wdk-checkout-and-woocommerce-plugin/raw/main/media/demo/wdk-pay-checkout-demo.webm" controls muted></video>

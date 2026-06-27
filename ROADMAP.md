@@ -266,4 +266,8 @@ roadmaps.
   `CheckoutTheme` partial passed to the widget as `WDK_PAY.theme`, so merchants
   re-skin the checkout with no code. See `docs/MERCHANT_SETUP.md` / README
   "Customization".
-- **Capture screenshots** of XAUt checkout + the x402 Worker flow, add to `media/screenshots/` + README.
+- ✅ **Imagery refreshed** — added a live capture of the widget rendering the **real
+  Tether ₮** (`checkout-usdt.png`), a faithful preview of the new **Bitcoin on-chain**
+  checkout (`checkout-bitcoin.png`, BIP-21 QR), and the embedded **real token marks**
+  (`token-marks.png`: USD₮ / Tether Gold / BTC / ETH) — all referenced from the README.
+  *(Still to capture: XAUt checkout + the x402 Worker flow.)*
