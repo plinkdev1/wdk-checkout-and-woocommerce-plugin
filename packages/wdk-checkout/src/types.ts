@@ -84,6 +84,13 @@ export interface CheckoutTheme {
   fontFamily: string
   /** Optional heading/display font stack (brand name + amount). Falls back to fontFamily. */
   headingFontFamily?: string
+  /**
+   * Optional web-font stylesheet URL to actually *load* the brand font (e.g. a
+   * Google Fonts `https://fonts.googleapis.com/css2?family=…` href, or any
+   * `@font-face` CSS). Injected as a `<link rel="stylesheet">` scoped to the
+   * widget; without it `fontFamily` only requests already-installed fonts.
+   */
+  fontUrl?: string
 }
 
 /**

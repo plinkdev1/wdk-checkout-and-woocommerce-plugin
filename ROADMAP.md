@@ -115,11 +115,11 @@ theming standard we set on the WDK wallet template + extension.
     in the WooCommerce **Checkout appearance** admin (logo media-picker + header
     text) so a merchant brands the modal with zero code — exactly how the wallet
     products expose `brand.markSrc` / `wordmarkSrc`.
-12. **Typography — real font control.** `CheckoutTheme.fontFamily` is a CSS stack
-    only (it can't load anything). Add optional web-font loading (`fontUrl` /
-    Google-Fonts name / `@font-face`), a separate heading font, and a weight/size
-    scale, so the checkout actually *renders* the storefront's brand font instead
-    of only requesting it if already installed.
+12. ✅ **Typography — real font control.** `CheckoutTheme.fontUrl` loads the brand
+    web-font (a Google Fonts `css2` href or any `@font-face` CSS), injected as a
+    scoped `<link rel="stylesheet">`, so `fontFamily` actually *renders* instead of
+    only requesting an installed font. A separate `headingFontFamily` (brand name +
+    amount) is also supported. *(Follow-up: a numeric weight/size scale token.)*
 13. ✅ **Shape & edges — per-element radii + button styles.** `CheckoutTheme` gained
     `cardRadius` / `buttonRadius` / `inputRadius` (each falls back to the global
     `radius`, so button edges are independently square / rounded / pill) plus a

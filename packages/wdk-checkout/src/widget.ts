@@ -27,6 +27,14 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
 
   root.innerHTML = ''
   const el = buildDom(intent, theme, strings, config.brand)
+  // Load the brand web-font (Google Fonts href / @font-face CSS) so `fontFamily`
+  // actually renders, not just requests an installed font. Scoped to the root.
+  if (theme.fontUrl) {
+    const fontLink = document.createElement('link')
+    fontLink.rel = 'stylesheet'
+    fontLink.href = theme.fontUrl
+    el.container.appendChild(fontLink)
+  }
   // Merchant escape hatch: raw CSS scoped under the widget root (torn down with it).
   if (config.customCss) {
     const style = document.createElement('style')
