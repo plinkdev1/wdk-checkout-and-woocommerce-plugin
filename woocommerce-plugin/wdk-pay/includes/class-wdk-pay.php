@@ -29,11 +29,18 @@ final class WDK_Pay {
 	private static $instance = null;
 
 	/**
-	 * REST controller.
+	 * REST controller (on-chain USDt).
 	 *
 	 * @var WDK_Pay_REST
 	 */
 	private $rest;
+
+	/**
+	 * REST controller (Lightning).
+	 *
+	 * @var WDK_Pay_Lightning_REST
+	 */
+	private $lightning_rest;
 
 	/**
 	 * Retrieve (and lazily create) the singleton instance.
@@ -52,7 +59,8 @@ final class WDK_Pay {
 	 * Constructor: register all hooks.
 	 */
 	private function __construct() {
-		$this->rest = new WDK_Pay_REST();
+		$this->rest           = new WDK_Pay_REST();
+		$this->lightning_rest = new WDK_Pay_Lightning_REST();
 		$this->register_hooks();
 	}
 
@@ -65,8 +73,9 @@ final class WDK_Pay {
 		// Register the gateway with WooCommerce.
 		add_filter( 'woocommerce_payment_gateways', array( $this, 'register_gateway' ) );
 
-		// REST routes.
+		// REST routes (on-chain + Lightning).
 		add_action( 'rest_api_init', array( $this->rest, 'register_routes' ) );
+		add_action( 'rest_api_init', array( $this->lightning_rest, 'register_routes' ) );
 
 		// Internationalisation.
 		add_action( 'init', array( $this, 'load_textdomain' ) );
@@ -87,6 +96,7 @@ final class WDK_Pay {
 	 */
 	public function register_gateway( $gateways ) {
 		$gateways[] = 'WDK_Pay_Gateway';
+		$gateways[] = 'WDK_Pay_Lightning_Gateway';
 
 		return $gateways;
 	}
@@ -140,24 +150,26 @@ final class WDK_Pay {
 		if ( $gateway instanceof WDK_Pay_Gateway ) {
 			$gateway->maybe_render_admin_notice();
 		}
+
+		$lightning = $this->get_gateway_instance( 'wdk_pay_lightning' );
+		if ( $lightning instanceof WDK_Pay_Lightning_Gateway ) {
+			$lightning->maybe_render_admin_notice();
+		}
 	}
 
 	/**
-	 * Resolve the live gateway instance from WooCommerce.
+	 * Resolve a live gateway instance from WooCommerce by id.
 	 *
-	 * @return WDK_Pay_Gateway|null
+	 * @param string $id Gateway id (defaults to the on-chain USDt gateway).
+	 * @return WC_Payment_Gateway|null
 	 */
-	private function get_gateway_instance() {
+	private function get_gateway_instance( $id = 'wdk_pay' ) {
 		if ( ! function_exists( 'WC' ) || ! WC()->payment_gateways() ) {
 			return null;
 		}
 
 		$gateways = WC()->payment_gateways()->payment_gateways();
 
-		if ( isset( $gateways['wdk_pay'] ) && $gateways['wdk_pay'] instanceof WDK_Pay_Gateway ) {
-			return $gateways['wdk_pay'];
-		}
-
-		return null;
+		return isset( $gateways[ $id ] ) ? $gateways[ $id ] : null;
 	}
 }

@@ -82,17 +82,24 @@ USDt on **Ethereum**, **Polygon**, and **Arbitrum** out of the box (default toke
 
 ```
 woocommerce-plugin/wdk-pay/
-├── wdk-pay.php                     # plugin bootstrap
+├── wdk-pay.php                           # plugin bootstrap
 ├── includes/
-│   ├── class-wdk-pay-gateway.php   # WC_Payment_Gateway: settings, process_payment, order-pay page
-│   ├── class-wdk-pay-rest.php      # REST: POST /confirm, GET /status
-│   ├── class-wdk-pay-verifier.php  # on-chain verification via JSON-RPC
-│   ├── class-wdk-pay-chains.php    # chains + default USDt addresses
-│   └── class-wdk-pay-intent.php    # builds the payment intent
-└── assets/js/wdk-checkout.js       # the built checkout widget
+│   ├── class-wdk-pay-gateway.php         # WC_Payment_Gateway (USDt): settings, process_payment, order-pay page
+│   ├── class-wdk-pay-rest.php            # REST: POST /confirm, GET /status
+│   ├── class-wdk-pay-verifier.php        # on-chain verification via JSON-RPC
+│   ├── class-wdk-pay-chains.php          # chains + default USDt addresses
+│   ├── class-wdk-pay-intent.php          # builds the payment intent
+│   ├── class-wdk-pay-lightning-gateway.php  # WC_Payment_Gateway (Lightning): mints + renders a BOLT11 invoice
+│   ├── class-wdk-pay-lightning-client.php   # Lightning backend client (Spark service / LNbits / LND-REST)
+│   └── class-wdk-pay-lightning-rest.php     # REST: GET /lightning/status/{orderKey} (server-side settle)
+└── assets/js/wdk-checkout.js             # the built checkout widget
 ```
 
-Install it like any WooCommerce plugin and configure your receiving address, chain, and RPC URL. Full steps: [`docs/MERCHANT_SETUP.md`](./docs/MERCHANT_SETUP.md).
+Two gateways ship in the plugin: **Pay with USDt/XAUt** (on-chain, verified over
+JSON-RPC) and **Pay with Lightning** (a BOLT11 invoice minted server-side against a
+Lightning backend you control — a Spark service, LNbits, or LND-REST; pays into
+your own wallet). Install it like any WooCommerce plugin and configure the gateway
+you want. Full steps: [`docs/MERCHANT_SETUP.md`](./docs/MERCHANT_SETUP.md).
 
 ## The checkout widget
 

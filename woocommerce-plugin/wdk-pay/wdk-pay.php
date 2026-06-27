@@ -71,6 +71,9 @@ function wdk_pay_bootstrap() {
 	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-verifier.php';
 	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-rest.php';
 	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-gateway.php';
+	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-lightning-client.php';
+	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-lightning-gateway.php';
+	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-lightning-rest.php';
 	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay.php';
 
 	WDK_Pay::instance();

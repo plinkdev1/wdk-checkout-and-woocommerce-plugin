@@ -31,14 +31,25 @@
 2. **Multi-chain auto-detect** — let the shopper pay on any supported EVM chain;
    the gateway verifies on whichever chain the tx landed.
 3. ✅ **Lightning (Spark) checkout** (`@tetherto/wdk-wallet-spark`) — done
-   (invoice + settle rail). A new `wdk-checkout/lightning` module handles the
-   merchant side: mint a BOLT11 invoice for the order, then poll to settlement.
-   Backends are pluggable via a `LightningProvider`; `createLightningClient`
-   wires a generic REST endpoint (injectable fetch, tolerant parsers for
-   Spark/LNbits/LND-REST) and `pollInvoice` drives it to a paid/expired terminal
-   state. Sats helpers (`satsForFiat`, `btcToSats`, `formatSats`) price the
-   order. The customer pays from any Lightning wallet (incl. a WDK Spark wallet);
-   no node URL/key is hard-coded.
+   end-to-end (rail **and** a live WooCommerce gateway).
+   - ✅ **Rail** — the `wdk-checkout/lightning` module: mint a BOLT11 invoice,
+     poll to settlement. Backends are pluggable via a `LightningProvider`;
+     `createLightningClient` wires a generic REST endpoint (injectable fetch,
+     tolerant parsers for Spark/LNbits/LND-REST) and `pollInvoice` drives it to a
+     paid/expired terminal state. Sats helpers (`satsForFiat`, `btcToSats`,
+     `formatSats`) price the order. `createSparkLightningProvider` adapts a WDK
+     Spark account so a merchant can receive **into their own Spark wallet** (no
+     third-party LN service; the package imports no SDK). No node URL/key is
+     hard-coded.
+   - ✅ **WooCommerce gateway** — a `WDK_Pay_Lightning_Gateway` (id
+     `wdk_pay_lightning`) the merchant selects at checkout. Admin settings point
+     it at a Lightning backend (Spark service / LNbits / LND-REST). The order-pay
+     page converts the total to sats, mints a BOLT11 invoice **server-side**
+     (credentials never reach the browser), renders it as a QR + copyable string,
+     and polls `GET /wdk-pay/v1/lightning/status/{orderKey}`; on paid it calls
+     `payment_complete()`. PHP mirror of the JS rail (`class-wdk-pay-lightning-*`).
+     The customer pays from any Lightning wallet (incl. a WDK Spark wallet).
+   - Follow-up: a live BTC price feed (the gateway uses a configured rate today).
 4. **Bitcoin on-chain** — accept BTC via the engine's BIP-84 support.
 
 5. ✅ **x402 — charge bots/agents/crawlers** — an HTTP 402 facilitator
