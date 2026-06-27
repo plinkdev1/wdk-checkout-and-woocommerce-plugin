@@ -65,4 +65,4 @@ WDK_Pay/
 ```
 
 All PHP passes `php -l`; the on-chain verifier mirrors the WooCommerce plugin and
-the `wdk-checkout/verify` JS module rule-for-rule.
+the `@wdk-starter/wdk-payment-verifier` JS module rule-for-rule.

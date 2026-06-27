@@ -139,8 +139,9 @@
    verification) proving a non-WooCommerce backend wires up the same way.
    - ✅ **Shopify app** (`shopify-app/`) — the core wired into Shopify's **Payments
      Apps** flow: a Node server takes a signed payment session, hosts the WDK Pay
-     widget, verifies the transfer on-chain with the new `wdk-checkout/verify`
-     (rejecting any unconfigured chainId), then `paymentSessionResolve` /
+     widget, verifies the transfer on-chain with the published
+     `@wdk-starter/wdk-payment-verifier` (rejecting any unconfigured chainId),
+     then `paymentSessionResolve` /
      `paymentSessionReject` through the Payments Apps API. Funds settle straight to
      the merchant; Shopify only learns the outcome. Tested (HMAC auth + the API
      client with a mocked fetch).
@@ -150,7 +151,7 @@
      controller that authenticates with the order's protect code, checks the
      reported `chainId` strictly against the configured chain, verifies the
      on-chain `Transfer` (`Model\Verifier`, rule-for-rule with the WooCommerce +
-     `wdk-checkout/verify` verifiers), and invoices the order. Admin settings,
+     `@wdk-starter/wdk-payment-verifier` verifiers), and invoices the order. Admin settings,
      chain registry, and base-unit math mirror the WooCommerce plugin. All PHP
      passes `php -l`; all XML is well-formed.
 9. ✅ **Fiat on-ramp at checkout** (`@tetherto/wdk-protocol-fiat-moonpay`) — a

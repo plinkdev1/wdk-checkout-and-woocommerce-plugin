@@ -16,9 +16,11 @@ Shopify's **Payments Apps** model lets an app provide a payment method. The flow
 3. The page mounts the real **WDK Pay widget** (`mountCheckout`) — the buyer pays
    USDt from their own EVM wallet (or pays manually + confirms by tx hash).
 4. The widget POSTs the tx hash to `POST /confirm`; the app **verifies the
-   transfer on-chain** with [`@wdk-starter/wdk-checkout/verify`](../packages/wdk-checkout/src/verify.ts)
-   (same rules as the WooCommerce verifier) and calls `paymentSessionResolve`
-   (or `paymentSessionReject`) through the Payments Apps API.
+   transfer on-chain** with the published
+   [`@wdk-starter/wdk-payment-verifier`](../packages/wdk-payment-verifier)
+   (`PaymentVerifier.verify` — the headless counterpart to the WooCommerce PHP
+   verifier) and calls `paymentSessionResolve` (or `paymentSessionReject`) through
+   the Payments Apps API.
 5. The buyer returns to Shopify's order-status page.
 
 The reported `chainId` is checked against the configured chain — the app never

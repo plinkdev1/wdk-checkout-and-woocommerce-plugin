@@ -12,7 +12,7 @@
  *                                     (mountCheckout) over their own EVM wallet.
  *   GET  /intent?session=ID           JSON intent the widget consumes.
  *   POST /confirm                     { session, txHash, chainId } → verify the
- *                                     transfer on-chain (wdk-checkout/verify) and
+ *                                     transfer on-chain (wdk-payment-verifier) and
  *                                     paymentSessionResolve / Reject on Shopify.
  *   GET  /wdk-checkout.js             The built widget bundle.
  *
@@ -25,9 +25,12 @@
 
 import { createServer } from 'node:http'
 import { readFile } from 'node:fs/promises'
-import { verifyTransfer } from '@wdk-starter/wdk-checkout/verify'
+import { PaymentVerifier } from '@wdk-starter/wdk-payment-verifier'
 import { config } from './src/config.mjs'
 import { verifyShopifyHmac, resolvePaymentSession, rejectPaymentSession } from './src/shopify.mjs'
+
+/** On-chain verifier (the published headless counterpart to the PHP verifier). */
+const verifier = new PaymentVerifier({ rpcUrl: config.rpcUrl })
 
 /** In-memory session store: sessionId → { id, amount, currency, returnUrl, intent, status }. */
 const sessions = new Map()
@@ -129,14 +132,11 @@ const server = createServer(async (req, res) => {
         json(res, 200, { status: 'failed', message: 'unsupported chain' }); return
       }
 
-      const result = await verifyTransfer({
-        rpcUrl: config.rpcUrl,
-        txHash: String(txHash),
-        token: config.token,
-        to: config.receiving,
-        minAmountBase: session.intent.amountBase,
-        confirmations: config.confirmations,
-      })
+      const result = await verifier.verify(
+        { tokenAddress: config.token, receivingAddress: config.receiving, amountBase: session.intent.amountBase },
+        String(txHash),
+        config.confirmations,
+      )
 
       if (result.status === 'confirmed') {
         session.status = 'confirmed'
@@ -146,10 +146,10 @@ const server = createServer(async (req, res) => {
       }
       if (result.status === 'failed') {
         try { await rejectPaymentSession(session.id) } catch (e) { console.error('[shopify] reject failed:', e.message) }
-        json(res, 200, { status: 'failed', message: result.message })
+        json(res, 200, { status: 'failed', message: result.reason })
         return
       }
-      json(res, 200, { status: 'pending', message: result.message, confirmations: result.confirmations })
+      json(res, 200, { status: 'pending', message: result.reason, confirmations: result.confirmations })
       return
     }
 

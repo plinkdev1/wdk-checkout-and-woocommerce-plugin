@@ -12,7 +12,7 @@ use Magento\Framework\HTTP\Client\Curl;
 
 /**
  * Verifies an ERC-20 (USDt) transfer on-chain — the Magento mirror of the
- * WooCommerce plugin's verifier and the `wdk-checkout/verify` JS module:
+ * WooCommerce plugin's verifier and the `@wdk-starter/wdk-payment-verifier` JS module:
  *   1. eth_getTransactionReceipt status == 0x1.
  *   2. A Transfer log whose emitter is the token, indexed `to` is the merchant,
  *      and value >= the required base amount.
