@@ -177,8 +177,12 @@ theming standard we set on the WDK wallet template + extension.
     focus-trapped `role="dialog"` (Tab cycles within, Escape / backdrop / close
     button dismiss, focus restores to the launcher) — this also lands the focus-trap
     deferred from #18. The inline mount stays the default.
-23. **Framework wrappers.** Thin `@wdk/checkout-react` (and Vue) wrappers around
-    the Web Component for idiomatic embedding + typed props.
+23. ✅ **Framework wrappers.** Idiomatic **React** embedding ships via the
+    `@wdk-starter/wdk-checkout/react` subpath — `<WdkCheckout config>` +
+    `useWdkPayment(config)` (typed props + headless state machine). **Vue / Svelte /
+    plain HTML** embed idiomatically through the `<wdk-pay>` Web Component (#20), which
+    those frameworks consume natively. *(Follow-up: publish standalone framework
+    packages once #21 lands.)*
 
 ---
 
