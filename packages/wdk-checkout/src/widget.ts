@@ -193,13 +193,22 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, strings: Checkou
   container.appendChild(amountCard)
 
   const tabBar = div({ display: 'flex', gap: '6px', marginBottom: '14px' })
+  tabBar.setAttribute('role', 'tablist')
+  tabBar.setAttribute('aria-label', strings.payWithWallet)
   const walletTab = tabButton(strings.payWithWallet, true)
+  walletTab.id = 'wdk-tab-wallet'
+  walletTab.setAttribute('aria-controls', 'wdk-panel-wallet')
   const manualTab = tabButton(strings.payManually, false)
+  manualTab.id = 'wdk-tab-manual'
+  manualTab.setAttribute('aria-controls', 'wdk-panel-manual')
   tabBar.append(walletTab, manualTab)
   container.appendChild(tabBar)
 
   // Wallet panel
   const walletPanel = div({})
+  walletPanel.id = 'wdk-panel-wallet'
+  walletPanel.setAttribute('role', 'tabpanel')
+  walletPanel.setAttribute('aria-labelledby', 'wdk-tab-wallet')
   const payBtn = button(`${esc(strings.pay)} ${esc(intent.amount)} ${esc(intent.tokenSymbol)}`)
   walletPanel.appendChild(payBtn)
   const hint = p(strings.walletHint)
@@ -207,6 +216,10 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, strings: Checkou
 
   // Manual panel
   const manualPanel = div({ display: 'none' })
+  manualPanel.id = 'wdk-panel-manual'
+  manualPanel.setAttribute('role', 'tabpanel')
+  manualPanel.setAttribute('aria-labelledby', 'wdk-tab-manual')
+  manualPanel.setAttribute('aria-hidden', 'true')
   const qr = document.createElement('img')
   qr.src = qrDataUrl(intent.receivingAddress)
   qr.alt = 'Receiving address QR'
@@ -218,6 +231,7 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, strings: Checkou
   manualPanel.appendChild(hashLabel)
   const hashInput = document.createElement('input')
   hashInput.placeholder = '0x…'
+  hashInput.setAttribute('aria-label', strings.hashInputAria)
   Object.assign(hashInput.style, { width: '100%', padding: '10px 12px', borderRadius: 'var(--wp-input-radius)', border: '1px solid var(--wp-border)', fontSize: '13px', boxSizing: 'border-box', marginBottom: '8px' })
   manualPanel.appendChild(hashInput)
   const confirmBtn = button(strings.confirmPayment)
@@ -226,6 +240,8 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, strings: Checkou
   container.append(walletPanel, manualPanel)
 
   const statusBox = div({ marginTop: '14px', minHeight: '20px', fontSize: '13px' })
+  statusBox.setAttribute('role', 'status')
+  statusBox.setAttribute('aria-live', 'polite')
   container.appendChild(statusBox)
 
   const countdown = div({ marginTop: '10px', fontSize: '12px', color: 'var(--wp-text-muted)', textAlign: 'center' })
@@ -264,8 +280,12 @@ function switchTab (el: Dom, tab: 'wallet' | 'manual') {
   const isWallet = tab === 'wallet'
   el.panels.wallet.style.display = isWallet ? 'block' : 'none'
   el.panels.manual.style.display = isWallet ? 'none' : 'block'
+  el.panels.wallet.setAttribute('aria-hidden', String(!isWallet))
+  el.panels.manual.setAttribute('aria-hidden', String(isWallet))
   el.tabs.wallet.style.opacity = isWallet ? '1' : '.55'
   el.tabs.manual.style.opacity = isWallet ? '.55' : '1'
+  el.tabs.wallet.setAttribute('aria-selected', String(isWallet))
+  el.tabs.manual.setAttribute('aria-selected', String(!isWallet))
 }
 
 function renderStatus (el: Dom, status: PaymentStatus, message: string | undefined, strings: CheckoutStrings) {
@@ -318,12 +338,16 @@ function p (text: string): HTMLElement {
 }
 function button (label: string): HTMLButtonElement {
   const b = document.createElement('button')
+  b.type = 'button'
   b.innerHTML = label
   Object.assign(b.style, { width: '100%', padding: '13px', borderRadius: 'var(--wp-button-radius)', border: 'var(--wp-button-border)', background: 'var(--wp-button-bg)', color: 'var(--wp-button-fg)', fontSize: '15px', fontWeight: '600', cursor: 'pointer' })
   return b
 }
 function tabButton (label: string, active: boolean): HTMLButtonElement {
   const b = document.createElement('button')
+  b.type = 'button'
+  b.setAttribute('role', 'tab')
+  b.setAttribute('aria-selected', String(active))
   b.textContent = label
   Object.assign(b.style, { flex: '1', padding: '8px', borderRadius: 'var(--wp-input-radius)', border: '1px solid var(--wp-border)', background: 'transparent', fontSize: '13px', cursor: 'pointer', color: 'inherit', opacity: active ? '1' : '.55' })
   return b

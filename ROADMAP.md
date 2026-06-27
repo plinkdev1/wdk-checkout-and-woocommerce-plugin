@@ -148,9 +148,12 @@ theming standard we set on the WDK wallet template + extension.
     through a `CheckoutStrings` contract. Pass `strings` (a partial or a full locale
     pack) on `WdkPayConfig`; `resolveCheckoutStrings()` (exported, unit-tested)
     layers it over the English defaults. No more hard-coded copy.
-18. **Accessibility pass.** Dialog ARIA roles, focus trap + restore, keyboard
-    navigation, and contrast-checked default palettes — so the drop-in is
-    WCAG-friendly out of the box.
+18. ✅ **Accessibility pass.** The inline widget is now ARIA-correct: a
+    `tablist` / `tab` / `tabpanel` structure with `aria-selected` + `aria-hidden`
+    toggled on switch, a `role="status"` `aria-live="polite"` status region (screen
+    readers announce flow changes), an `aria-label` on the hash input, and explicit
+    `type="button"` on every control (no accidental form submits). *(Focus trap +
+    restore land with the launchable modal/overlay mode — #22.)*
 
 ### 5B — Drop-in embed (any stack, not only WooCommerce)
 

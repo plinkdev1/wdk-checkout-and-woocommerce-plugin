@@ -145,6 +145,8 @@ export interface CheckoutStrings {
   verificationFailed: string
   /** Validation: the pasted hash is malformed. */
   invalidHash: string
+  /** Accessible label for the transaction-hash input. */
+  hashInputAria: string
 }
 
 /** Default (English) widget strings. Override any subset via `WdkPayConfig.strings`. */
@@ -175,6 +177,7 @@ export const DEFAULT_CHECKOUT_STRINGS: CheckoutStrings = {
   couldNotVerify: 'We could not verify that transaction. Check the hash, amount, and recipient and try again.',
   verificationFailed: 'Verification failed.',
   invalidHash: 'Enter a valid transaction hash (0x…64 hex chars).',
+  hashInputAria: 'Transaction hash',
 }
 
 /** Merge a partial string override over the English defaults. */
