@@ -71,9 +71,15 @@ For customers with no native gas token, the checkout can use **EIP-3009 `transfe
 correctly — and the same package powers an on-chain **Bitcoin** gateway (BIP-21 QR,
 verified via Esplora) alongside USDt and Lightning.
 
-| USDt checkout (live widget) | Bitcoin on-chain checkout | Embedded token marks |
+| USDt checkout (live widget) | XAUt — Tether Gold | Bitcoin on-chain checkout |
 |:--:|:--:|:--:|
-| ![USDt checkout with the real Tether mark](./media/screenshots/checkout-usdt.png) | ![Bitcoin on-chain checkout — BIP-21 QR](./media/screenshots/checkout-bitcoin.png) | ![Real USD₮ / Tether Gold / BTC / ETH marks](./media/screenshots/token-marks.png) |
+| ![USDt checkout with the real Tether mark](./media/screenshots/checkout-usdt.png) | ![XAUt (Tether Gold) checkout with the real gold ₮ mark](./media/screenshots/checkout-xaut.png) | ![Bitcoin on-chain checkout — BIP-21 QR](./media/screenshots/checkout-bitcoin.png) |
+
+The same asset-agnostic widget renders every rail with the **genuine token logo**
+(embedded, always correct): the green Tether ₮, the gold Tether Gold ₮, Bitcoin ₿,
+and the Ethereum diamond.
+
+![Real USD₮ / Tether Gold / BTC / ETH marks](./media/screenshots/token-marks.png)
 
 **▶ Demo video** — a real screen recording of the running widget (storefront → amount card with the live token icon → wallet tab → manual QR + address + tx-hash):
 
