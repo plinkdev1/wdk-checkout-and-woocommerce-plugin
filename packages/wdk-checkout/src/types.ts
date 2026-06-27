@@ -154,6 +154,8 @@ export interface CheckoutStrings {
   invalidHash: string
   /** Accessible label for the transaction-hash input. */
   hashInputAria: string
+  /** Fiat on-ramp link ("Don't have crypto? Buy with card"). */
+  buyWithCard: string
 }
 
 /** Default (English) widget strings. Override any subset via `WdkPayConfig.strings`. */
@@ -185,6 +187,7 @@ export const DEFAULT_CHECKOUT_STRINGS: CheckoutStrings = {
   verificationFailed: 'Verification failed.',
   invalidHash: 'Enter a valid transaction hash (0x…64 hex chars).',
   hashInputAria: 'Transaction hash',
+  buyWithCard: "Don't have crypto? Buy with card ↗",
 }
 
 /** Merge a partial string override over the English defaults. */
@@ -353,6 +356,12 @@ export interface WdkPayConfig {
    * e.g. `[data-wdk="pay-button"]{letter-spacing:.04em}`.
    */
   readonly customCss?: string
+  /**
+   * Optional fiat on-ramp. When set, the widget shows a "Buy with card" link that
+   * opens a buy-crypto flow (MoonPay by default) pre-filled with the order amount,
+   * so a shopper without crypto can fund and pay. See `OnrampConfig`.
+   */
+  readonly onramp?: import('./onramp.js').OnrampConfig
 }
 
 /** Minimal EIP-1193 provider shape (e.g. `window.ethereum`). */

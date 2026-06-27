@@ -1,5 +1,6 @@
 import type { CheckoutBrand, CheckoutStrings, CheckoutTheme, PaymentIntent, PaymentStatus, WdkPayConfig } from './types.js'
 import { resolveCheckoutTheme, resolveCheckoutStrings } from './types.js'
+import { buildOnrampUrl } from './onramp.js'
 import { payIntent } from './usdt.js'
 import { qrDataUrl } from './qr.js'
 import { fiatDisplayLine } from './pricing.js'
@@ -34,6 +35,22 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
     fontLink.rel = 'stylesheet'
     fontLink.href = theme.fontUrl
     el.container.appendChild(fontLink)
+  }
+  // Fiat on-ramp: a "Buy with card" link under the wallet pay button for shoppers
+  // without crypto, pre-filled with the order amount.
+  if (config.onramp) {
+    const link = document.createElement('a')
+    link.href = buildOnrampUrl(config.onramp, {
+      currencyCode: intent.tokenSymbol,
+      ...(intent.displayTotal !== undefined ? { fiatAmount: intent.displayTotal } : {}),
+      ...(intent.currency !== undefined ? { fiatCurrency: intent.currency } : {}),
+    })
+    link.target = '_blank'
+    link.rel = 'noreferrer'
+    link.textContent = strings.buyWithCard
+    link.setAttribute('data-wdk', 'onramp')
+    Object.assign(link.style, { display: 'block', textAlign: 'center', fontSize: '12px', color: 'var(--wp-accent)', textDecoration: 'none', marginTop: '10px' })
+    el.panels.wallet.appendChild(link)
   }
   // Merchant escape hatch: raw CSS scoped under the widget root (torn down with it).
   if (config.customCss) {

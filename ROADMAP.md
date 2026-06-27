@@ -92,8 +92,13 @@
 
 8. **More platforms** — Shopify app, Magento, and a generic REST/webhook core so
    the same verification engine backs any storefront.
-9. **Fiat on-ramp at checkout** (`@tetherto/wdk-protocol-fiat-moonpay`) — let
-   shoppers without crypto buy and pay in one flow.
+9. ✅ **Fiat on-ramp at checkout** (`@tetherto/wdk-protocol-fiat-moonpay`) — a
+   pluggable `wdk-checkout/onramp` module (`buildOnrampUrl`, unit-tested) builds a
+   buy-crypto URL (MoonPay default, any provider via `baseUrl`, server-signing seam
+   via `signUrl`); the widget shows a **"Buy with card ↗"** link under the pay
+   button, pre-filled with the order amount, when `WdkPayConfig.onramp` is set. The
+   WooCommerce gateway exposes a MoonPay-key field that turns it on. So a shopper
+   without crypto can fund and pay in one flow.
 10. Hosted **payment-status webhooks** + reconciliation dashboard.
 
 ## ⏳ Phase 5 — White-label widget & drop-in embed

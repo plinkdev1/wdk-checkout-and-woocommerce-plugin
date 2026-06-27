@@ -179,6 +179,14 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 				'default'     => 'no',
 				'desc_tip'    => false,
 			),
+			'onramp_key'         => array(
+				'title'       => __( 'Fiat on-ramp (MoonPay key)', 'wdk-pay' ),
+				'type'        => 'text',
+				'description' => __( 'Optional. A MoonPay publishable key (pk_…) shows a "Buy with card" link so shoppers without crypto can fund and pay. Production MoonPay URLs must be signed server-side.', 'wdk-pay' ),
+				'default'     => '',
+				'placeholder' => 'pk_live_… / pk_test_…',
+				'desc_tip'    => true,
+			),
 			'appearance_title'   => array(
 				'title'       => __( 'Checkout appearance', 'wdk-pay' ),
 				'type'        => 'title',
@@ -631,6 +639,7 @@ JS;
 			'pricing_note'      => 'yes' === $this->get_option( 'pricing_note', 'yes' ),
 			'theme'             => $this->resolve_theme(),
 			'brand'             => $this->resolve_brand(),
+			'onramp_key'        => trim( (string) $this->get_option( 'onramp_key', '' ) ),
 		);
 	}
 
@@ -918,6 +927,14 @@ JS;
 		// no header by default.
 		if ( ! empty( $settings['brand'] ) ) {
 			$config['brand'] = $settings['brand'];
+		}
+
+		// Fiat on-ramp ("Buy with card") — only when a MoonPay key is configured.
+		if ( ! empty( $settings['onramp_key'] ) ) {
+			$config['onramp'] = array(
+				'provider' => 'moonpay',
+				'apiKey'   => $settings['onramp_key'],
+			);
 		}
 
 		return $config;
