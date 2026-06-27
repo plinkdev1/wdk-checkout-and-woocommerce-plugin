@@ -337,6 +337,12 @@ export interface WdkPayConfig {
   readonly brand?: CheckoutBrand
   /** Optional UI-string overrides / locale pack (layered over the English defaults). */
   readonly strings?: Partial<CheckoutStrings>
+  /**
+   * Optional raw CSS injected into the widget (a `<style>` scoped to the root) for
+   * pixel-level control beyond the token set. Target the stable `data-wdk` hooks,
+   * e.g. `[data-wdk="pay-button"]{letter-spacing:.04em}`.
+   */
+  readonly customCss?: string
 }
 
 /** Minimal EIP-1193 provider shape (e.g. `window.ethereum`). */

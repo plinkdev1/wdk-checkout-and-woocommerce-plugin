@@ -27,6 +27,12 @@ export function mountCheckout (root: HTMLElement, config: WdkPayConfig): () => v
 
   root.innerHTML = ''
   const el = buildDom(intent, theme, strings, config.brand)
+  // Merchant escape hatch: raw CSS scoped under the widget root (torn down with it).
+  if (config.customCss) {
+    const style = document.createElement('style')
+    style.textContent = config.customCss
+    el.container.appendChild(style)
+  }
   root.appendChild(el.container)
 
   function setStatus (next: PaymentStatus, message?: string) {
@@ -148,6 +154,7 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, strings: Checkou
   // White-label brand header (logo + store name) — shown only when config.brand is set.
   if (brand && (brand.logoUrl || brand.name)) {
     const header = div({ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '14px' })
+    header.setAttribute('data-wdk', 'brand')
     if (brand.logoUrl) {
       const logo = document.createElement('img')
       logo.src = brand.logoUrl
@@ -165,6 +172,7 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, strings: Checkou
   }
 
   const amountCard = div({ background: 'var(--wp-surface)', color: 'var(--wp-on-surface)', borderRadius: 'var(--wp-card-radius)', padding: '20px', textAlign: 'center', marginBottom: '16px' })
+  amountCard.setAttribute('data-wdk', 'amount-card')
   // Familiar fiat price (e.g. "$19.99"), shown above the on-chain amount when
   // the intent carries a store-currency total. The token amount is what settles.
   const fiat = fiatDisplayLine(intent)
@@ -225,7 +233,20 @@ function buildDom (intent: PaymentIntent, theme: CheckoutTheme, strings: Checkou
 
   const footer = div({ marginTop: '12px', fontSize: '11px', color: 'var(--wp-text-faint)', textAlign: 'center' })
   footer.textContent = strings.securedBy
+  footer.setAttribute('data-wdk', 'footer')
   container.appendChild(footer)
+
+  // Stable hooks for merchant custom CSS (config.customCss) + external styling.
+  container.setAttribute('data-wdk', 'root')
+  payBtn.setAttribute('data-wdk', 'pay-button')
+  confirmBtn.setAttribute('data-wdk', 'confirm-button')
+  hashInput.setAttribute('data-wdk', 'hash-input')
+  statusBox.setAttribute('data-wdk', 'status')
+  countdown.setAttribute('data-wdk', 'countdown')
+  walletPanel.setAttribute('data-wdk', 'panel-wallet')
+  manualPanel.setAttribute('data-wdk', 'panel-manual')
+  walletTab.setAttribute('data-wdk', 'tab-wallet')
+  manualTab.setAttribute('data-wdk', 'tab-manual')
 
   return {
     container,

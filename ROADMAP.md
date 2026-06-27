@@ -134,9 +134,12 @@ theming standard we set on the WDK wallet template + extension.
     picks the base then layers the `theme` partial. The preset names are the
     **shared contract** with the wallet UI. *(Follow-up: surface the picker in the
     WooCommerce admin — see #16 live preview.)*
-15. **Custom-CSS escape hatch + class hooks.** Stable `data-wdk-*` / className
-    hooks on every element plus an optional `customCss` string, for merchants who
-    want pixel control beyond the token set.
+15. ✅ **Custom-CSS escape hatch + class hooks.** Every element carries a stable
+    `data-wdk` hook (`root`, `brand`, `amount-card`, `tab-wallet`/`tab-manual`,
+    `panel-wallet`/`panel-manual`, `pay-button`, `confirm-button`, `hash-input`,
+    `status`, `countdown`, `footer`), and `WdkPayConfig.customCss` injects raw CSS
+    as a `<style>` scoped under the root (torn down with the widget) — pixel control
+    beyond the token set, e.g. `[data-wdk="pay-button"]{letter-spacing:.04em}`.
 16. **Live preview in admin.** Render the themed widget live in the WooCommerce
     settings page as the merchant edits colors / logo / fonts (today they save,
     then check the order-pay screen).
