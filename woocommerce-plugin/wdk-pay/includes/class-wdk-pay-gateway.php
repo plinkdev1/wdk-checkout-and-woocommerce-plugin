@@ -184,6 +184,21 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 				'type'        => 'title',
 				'description' => __( 'Match the payment widget to your storefront. Colors are 6-digit hex (e.g. #F4642F); leave a color blank to use the WDK default.', 'wdk-pay' ),
 			),
+			'brand_name'         => array(
+				'title'       => __( 'Brand name', 'wdk-pay' ),
+				'type'        => 'text',
+				'description' => __( 'Optional store name shown atop the checkout widget (next to the logo).', 'wdk-pay' ),
+				'default'     => '',
+				'desc_tip'    => true,
+			),
+			'brand_logo'         => array(
+				'title'       => __( 'Brand logo', 'wdk-pay' ),
+				'type'        => 'wdk_media',
+				'description' => __( 'Optional logo shown atop the checkout widget. Pick from your media library or paste an image URL.', 'wdk-pay' ),
+				'default'     => '',
+				'placeholder' => 'https://…',
+				'desc_tip'    => true,
+			),
 			'theme_accent'       => array(
 				'title'       => __( 'Accent / button color', 'wdk-pay' ),
 				'type'        => 'wdk_color',
@@ -318,6 +333,94 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 	}
 
 	/**
+	 * Ensure the WordPress media library is available on the gateway settings
+	 * screen (so the brand-logo picker can open it), then render the form.
+	 *
+	 * @return void
+	 */
+	public function admin_options() {
+		wp_enqueue_media();
+		parent::admin_options();
+	}
+
+	/**
+	 * Render a media field: a URL text input, a "Select image" button that opens
+	 * the WordPress media library, and a small live preview. Registered as
+	 * form-field type `wdk_media`. Self-contained — the inline handlers drive
+	 * `wp.media` (loaded via admin_options()).
+	 *
+	 * @param string              $key  Field key.
+	 * @param array<string,mixed> $data Field definition.
+	 * @return string Field HTML (a settings table row).
+	 */
+	public function generate_wdk_media_html( $key, $data ) {
+		$field_key = $this->get_field_key( $key );
+		$defaults  = array(
+			'title'       => '',
+			'class'       => '',
+			'placeholder' => '',
+			'desc_tip'    => false,
+			'description' => '',
+			'default'     => '',
+		);
+		$data      = wp_parse_args( $data, $defaults );
+		$value     = (string) $this->get_option( $key, $data['default'] );
+		$preview   = $field_key . '_preview';
+
+		ob_start();
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label for="<?php echo esc_attr( $field_key ); ?>"><?php echo wp_kses_post( $data['title'] ); ?> <?php echo $this->get_tooltip_html( $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></label>
+			</th>
+			<td class="forminp">
+				<fieldset>
+					<legend class="screen-reader-text"><span><?php echo wp_kses_post( $data['title'] ); ?></span></legend>
+					<input
+						class="input-text regular-input <?php echo esc_attr( $data['class'] ); ?>"
+						type="text"
+						name="<?php echo esc_attr( $field_key ); ?>"
+						id="<?php echo esc_attr( $field_key ); ?>"
+						style="width:320px;vertical-align:middle;"
+						value="<?php echo esc_attr( $value ); ?>"
+						placeholder="<?php echo esc_attr( $data['placeholder'] ); ?>"
+						oninput="var p=document.getElementById('<?php echo esc_js( $preview ); ?>');if(p){p.src=this.value;p.style.display=this.value?'inline-block':'none';}" />
+					<button
+						type="button"
+						class="button"
+						style="vertical-align:middle;margin-left:6px;"
+						onclick="(function(input,prev){if(!window.wp||!wp.media){return;}var f=wp.media({title:'<?php echo esc_js( __( 'Select brand logo', 'wdk-pay' ) ); ?>',multiple:false,library:{type:'image'}});f.on('select',function(){var a=f.state().get('selection').first().toJSON();input.value=a.url;prev.src=a.url;prev.style.display='inline-block';});f.open();})(document.getElementById('<?php echo esc_js( $field_key ); ?>'),document.getElementById('<?php echo esc_js( $preview ); ?>'));return false;">
+						<?php esc_html_e( 'Select image', 'wdk-pay' ); ?>
+					</button>
+					<br />
+					<img id="<?php echo esc_attr( $preview ); ?>" src="<?php echo esc_url( $value ); ?>" alt="" style="max-height:40px;width:auto;margin-top:8px;border-radius:6px;display:<?php echo $value ? 'inline-block' : 'none'; ?>;" />
+					<?php echo $this->get_description_html( $data ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</fieldset>
+			</td>
+		</tr>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Validate/sanitize a `wdk_media` field on save: an http(s) image URL or blank.
+	 *
+	 * @param string $key   Field key.
+	 * @param string $value Submitted value.
+	 * @return string Sanitised URL, or '' when cleared.
+	 */
+	public function validate_wdk_media_field( $key, $value ) {
+		$value = esc_url_raw( trim( (string) $value ) );
+		if ( '' !== $value && ! wp_http_validate_url( $value ) ) {
+			WC_Admin_Settings::add_error(
+				__( 'WDK Pay: the brand logo must be a valid image URL.', 'wdk-pay' )
+			);
+			return (string) $this->get_option( $key );
+		}
+		return $value;
+	}
+
+	/**
 	 * Resolve the merchant's checkout-appearance settings into a CheckoutTheme
 	 * partial (the JS widget merges it over its DEFAULT_CHECKOUT_THEME).
 	 *
@@ -402,7 +505,28 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 			'gasless'           => 'yes' === $this->get_option( 'gasless_eip3009', 'no' ),
 			'pricing_note'      => 'yes' === $this->get_option( 'pricing_note', 'yes' ),
 			'theme'             => $this->resolve_theme(),
+			'brand'             => $this->resolve_brand(),
 		);
+	}
+
+	/**
+	 * Resolve the merchant's brand settings (logo + name) into a CheckoutBrand
+	 * partial for the widget. Returns an empty array when nothing is set, so the
+	 * widget renders no brand header.
+	 *
+	 * @return array<string,string> Partial CheckoutBrand (`name` / `logoUrl`).
+	 */
+	private function resolve_brand() {
+		$brand = array();
+		$name  = trim( (string) $this->get_option( 'brand_name', '' ) );
+		$logo  = esc_url_raw( trim( (string) $this->get_option( 'brand_logo', '' ) ) );
+		if ( '' !== $name ) {
+			$brand['name'] = $name;
+		}
+		if ( '' !== $logo ) {
+			$brand['logoUrl'] = $logo;
+		}
+		return $brand;
 	}
 
 	/**
@@ -663,6 +787,12 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 		// so the widget keeps its WDK default when the merchant changed nothing.
 		if ( ! empty( $settings['theme'] ) ) {
 			$config['theme'] = $settings['theme'];
+		}
+
+		// Merchant brand (logo + name) — only attach when set so the widget renders
+		// no header by default.
+		if ( ! empty( $settings['brand'] ) ) {
+			$config['brand'] = $settings['brand'];
 		}
 
 		return $config;

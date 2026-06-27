@@ -107,14 +107,13 @@ theming standard we set on the WDK wallet template + extension.
 
 ### 5A — Full white-label customization (parity with the WDK wallets)
 
-11. **Brand block — logo + top-center header slot.** Add a `brand` section to the
-    config: merchant `logoSrc` (+ `logoAlt`, `logoHeight`), optional
-    `title`/`subtitle`, and a **top-center header area** rendered above the
-    "Amount due" card — the natural home for a store logo. Today the widget has no
-    logo (the only mark is the "Secured by WDK" footer). Surface the same controls
-    in the WooCommerce **Checkout appearance** admin (logo media-picker + header
-    text) so a merchant brands the modal with zero code — exactly how the wallet
-    products expose `brand.markSrc` / `wordmarkSrc`.
+11. ✅ **Brand block — logo + top-center header slot.** The widget renders a
+    `brand` header (logo + store name) above the "Amount due" card from
+    `WdkPayConfig.brand` (`name` / `logoUrl` / `logoAlt`). The WooCommerce
+    **Checkout appearance** admin now surfaces it: a **brand name** field and a
+    **brand logo** media-picker (`wdk_media` field type → `wp.media` library with a
+    live preview), mapped to `WDK_PAY.brand` — a merchant brands the checkout with
+    zero code. *(Follow-up: optional subtitle / logo-height controls.)*
 12. ✅ **Typography — real font control.** `CheckoutTheme.fontUrl` loads the brand
     web-font (a Google Fonts `css2` href or any `@font-face` CSS), injected as a
     scoped `<link rel="stylesheet">`, so `fontFamily` actually *renders* instead of
