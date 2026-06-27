@@ -265,6 +265,15 @@ class WDK_Pay_REST {
 				);
 				$order->save();
 
+				WDK_Pay_Webhook::fire(
+					$order,
+					'payment.failed',
+					array(
+						'status' => WDK_Pay_Verifier::FAILED,
+						'txHash' => $tx_hash,
+					)
+				);
+
 				return $this->respond(
 					array(
 						'status'  => WDK_Pay_Verifier::FAILED,
@@ -339,6 +348,17 @@ class WDK_Pay_REST {
 
 		// payment_complete() transitions to processing/completed and saves.
 		$order->payment_complete( $tx_hash );
+
+		WDK_Pay_Webhook::fire(
+			$order,
+			'payment.confirmed',
+			array(
+				'status'  => WDK_Pay_Verifier::CONFIRMED,
+				'txHash'  => $tx_hash,
+				'chainId' => WDK_Pay_Chains::chain_id_for( $settings['chain'] ),
+				'token'   => (string) $settings['token_address'],
+			)
+		);
 
 		return array(
 			'status'  => WDK_Pay_Verifier::CONFIRMED,

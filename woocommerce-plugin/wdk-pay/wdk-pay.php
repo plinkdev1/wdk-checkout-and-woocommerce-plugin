@@ -69,6 +69,7 @@ function wdk_pay_bootstrap() {
 	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-chains.php';
 	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-intent.php';
 	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-verifier.php';
+	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-webhook.php';
 	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-rest.php';
 	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-gateway.php';
 	require_once WDK_PAY_PLUGIN_DIR . 'includes/class-wdk-pay-lightning-client.php';

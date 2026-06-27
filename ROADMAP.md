@@ -99,7 +99,13 @@
    button, pre-filled with the order amount, when `WdkPayConfig.onramp` is set. The
    WooCommerce gateway exposes a MoonPay-key field that turns it on. So a shopper
    without crypto can fund and pay in one flow.
-10. Hosted **payment-status webhooks** + reconciliation dashboard.
+10. ✅ **Payment-status webhooks** — a signed POST fires to the merchant's webhook
+    URL when an order is paid or fails (both on-chain **and** Lightning). The JS
+    `wdk-checkout/webhooks` module (`buildWebhookEvent` / `signWebhook` /
+    `verifyWebhook`, HMAC-SHA256 via Web Crypto, unit-tested) is the receiver/parity
+    half; the plugin fires server-side (`class-wdk-pay-webhook.php`, `hash_hmac`,
+    non-blocking) with an `X-WDK-Signature: sha256=…` header, configured by a
+    webhook URL + secret in the admin. *(Follow-up: a hosted reconciliation dashboard.)*
 
 ## ⏳ Phase 5 — White-label widget & drop-in embed
 

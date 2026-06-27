@@ -187,6 +187,21 @@ class WDK_Pay_Gateway extends WC_Payment_Gateway {
 				'placeholder' => 'pk_live_… / pk_test_…',
 				'desc_tip'    => true,
 			),
+			'webhook_url'        => array(
+				'title'       => __( 'Payment webhook URL', 'wdk-pay' ),
+				'type'        => 'text',
+				'description' => __( 'Optional. A signed POST is sent here when an order is paid or fails (both on-chain and Lightning). Verify the raw body against the X-WDK-Signature header with your secret.', 'wdk-pay' ),
+				'default'     => '',
+				'placeholder' => 'https://…/wdk-webhook',
+				'desc_tip'    => true,
+			),
+			'webhook_secret'     => array(
+				'title'       => __( 'Webhook signing secret', 'wdk-pay' ),
+				'type'        => 'password',
+				'description' => __( 'Shared secret for the HMAC-SHA256 signature (X-WDK-Signature: sha256=…). Required to enable webhooks.', 'wdk-pay' ),
+				'default'     => '',
+				'desc_tip'    => true,
+			),
 			'appearance_title'   => array(
 				'title'       => __( 'Checkout appearance', 'wdk-pay' ),
 				'type'        => 'title',

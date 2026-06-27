@@ -122,6 +122,17 @@ class WDK_Pay_Lightning_REST {
 			);
 			// Transitions to processing/completed and saves.
 			$order->payment_complete( $invoice_id );
+
+			WDK_Pay_Webhook::fire(
+				$order,
+				'payment.confirmed',
+				array(
+					'status' => WDK_Pay_Lightning_Client::STATUS_PAID,
+					'rail'   => 'lightning',
+					'txHash' => $invoice_id,
+				)
+			);
+
 			return $this->respond( WDK_Pay_Lightning_Client::STATUS_PAID );
 		}
 
